@@ -2,12 +2,15 @@
 using Kingmaker;
 using Kingmaker.Localization;
 using Kingmaker.Localization.Shared;
-using Kingmaker.Utility;
+using Kingmaker.UI.MVVM._PCView.Settings.Entities;
+using Kingmaker.UI.MVVM._PCView.Settings;
+using Kingmaker.UI.MVVM._VM.Settings.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using Kingmaker.Utility;
 
 namespace ModMenu
 {
