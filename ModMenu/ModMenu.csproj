@@ -46,9 +46,6 @@
     <Reference Include="Assembly-CSharp.dll">
       <HintPath>$(SolutionDir)lib\Assembly-CSharp_public.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Pathfinder Second Adventure\Wrath_Data\Managed\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="Owlcat.Runtime.UI.dll">
       <HintPath>$(SolutionDir)lib\Owlcat.Runtime.UI_public.dll</HintPath>
     </Reference>
@@ -75,6 +72,9 @@
     <Reference Include="UniRx.dll">
       <HintPath>$(WrathPath)\Wrath_Data\Managed\UniRx.dll</HintPath>
     </Reference>
+	<Reference Include="Newtonsoft.Json">
+	  <HintPath>$(WrathPath)\Wrath_Data\Managed\Newtonsoft.Json.dll</HintPath>
+	</Reference>
 
     <!-- UMM & Harmony -->
     <Reference Include="0Harmony">
