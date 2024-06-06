@@ -11,6 +11,11 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using Kingmaker.Utility;
+using Kingmaker.UI.MVVM._VM.Settings;
+using UniRx;
+using Kingmaker.UI.Common;
+using static UnityModManagerNet.UnityModManager;
+using UnityEngine.UI;
 
 namespace ModMenu
 {
@@ -39,7 +44,10 @@ namespace ModMenu
       stream.Read(bytes, 0, bytes.Length);
       var texture = new Texture2D(128, 128, TextureFormat.RGBA32, false);
       _ = texture.LoadImage(bytes);
-      var sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), Vector2.zero);
+      texture.name = embeddedImage + ".texture";
+      //the default value for PixelsPerUnit is 1, meaning that Sprite's Prefered size becomes 100 times more. So must be set to 100% manually
+      var sprite = Sprite.Create(texture, new(0, 0, texture.width, texture.height), Vector2.zero, 100);
+      sprite.name = embeddedImage + ".sprite";
       return sprite;
     }
 
@@ -86,6 +94,55 @@ namespace ModMenu
 
         ;putString:
         LocalizationManager.CurrentPack.PutString(LocalizedString.m_Key, localized);
+      }
+    }
+
+    static Sprite ImageForSettingDescription;
+    internal static void HandleShowSettingsDescriptionEx(this SettingsVM settings, string title, string description, Sprite image = null)
+    {      
+      ImageForSettingDescription = image;
+      settings.HandleShowSettingsDescription(
+                  title: title,
+                  description: description);
+    }
+
+    [HarmonyPatch]
+    static class SettingsDescriptionPatchToHandleModImages
+    {
+      //[HarmonyPatch(typeof(SettingsVM), nameof(SettingsVM.HandleShowSettingsDescription))]
+      //[HarmonyPrefix]
+      //static void HandleShowSettingsDescription_Prefix()
+      //  => ImageForSettingDescription = null;
+
+      [HarmonyPatch(typeof(SettingsVM), nameof(SettingsVM.HandleHideSettingsDescription))]
+      [HarmonyPrefix]
+      static void HandleHideSettingsDescription_Postfix()
+        => ImageForSettingDescription = null;
+
+      [HarmonyPatch(typeof(SettingsDescriptionPCView), nameof(SettingsDescriptionPCView.Initialize))]
+      [HarmonyPostfix]
+      static void SettingsDescriptionPCView_UpdateView_Initialize(SettingsDescriptionPCView __instance)
+      {
+        var content = __instance.transform.Find("BodyGroup/Content");
+        var go = new GameObject("Image");
+        var image = go.AddComponent<Image>();
+        image.preserveAspect = true;
+        go.AddComponent<LayoutElement>().preferredHeight = 160;
+        go.transform.SetParent(content, false);
+        go.transform.SetSiblingIndex(0);
+        go.SetActive(true);
+      }
+
+      [HarmonyPatch(typeof(SettingsDescriptionPCView), nameof(SettingsDescriptionPCView.UpdateView))]
+      [HarmonyPostfix]
+      static void SettingsDescriptionPCView_UpdateView_Postfix(SettingsDescriptionPCView __instance)
+      {
+        var image = __instance.transform.Find("BodyGroup/Content/Image").GetComponent<Image>();
+        image.sprite = ImageForSettingDescription;
+        if (ImageForSettingDescription == null)
+          image.gameObject.SetActive(false);
+        else
+          image.gameObject.SetActive(true);
       }
     }
 

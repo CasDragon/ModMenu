@@ -94,9 +94,10 @@ namespace ModMenu.NewTypes
               if (vm is null)
                 Main.Logger.Warning("SettingsEntityDropdownPCView_Patch - settings VM is null!");
               else
-                vm.HandleShowSettingsDescription(
-                  title: UIUtility.GetSaberBookFormat(modEntry.ModInfo.ModName, default(Color), 140, null, 0f),
-                  description: modEntry.ModInfo.GenerateDescription());
+                vm.HandleShowSettingsDescriptionEx(
+                  title: UIUtility.GetSaberBookFormat(modEntry.ModInfo.ModName, default, 140, null, 0f),
+                  description: modEntry.ModInfo.GenerateDescription(),
+                  image: modEntry.ModInfo.ModImage);
               })}
           });
         }

@@ -1,13 +1,15 @@
 ﻿using HarmonyLib;
-using Kingmaker.Blueprints.Classes.Spells;
 using Kingmaker.Blueprints.JsonSystem;
-using Kingmaker.Utility;
 using ModMenu.Settings;
 using System;
 using System.Linq;
 using System.Reflection;
 using static UnityModManagerNet.UnityModManager;
 using static UnityModManagerNet.UnityModManager.ModEntry;
+using System.Diagnostics;
+using System.Text;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 
 namespace ModMenu
 {
@@ -62,7 +64,6 @@ namespace ModMenu
           Logger.LogException("BlueprintsCache.Init", e);
         }
       }
-
     }
 #endif
   }

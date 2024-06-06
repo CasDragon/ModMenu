@@ -38,6 +38,7 @@ namespace ModMenu.Settings
           zhCN: "这是模组描述的一个测试案例，现在让我们多水一点字数吧，这样的话描述就能有好几行了",
           deDE: "Dies ist eine Testbeschreibung für einen Mod, und sie ist noch ein wenig länger, damit sie mehrere Zeilen benötigt.",
           frFR: "Ceci est un exemple de description de mod qui doit être assez long pour prendre deux lignes mais on n'a pas dit au traducteur quelle est la taille des lignes, j'imagine que c'est assez long maintenant. "))
+          .SetModIllustration(Helpers.CreateSprite("ModMenu.TestSettingsIllustration2.png"))
           .AddImage(Helpers.CreateSprite("ModMenu.WittleWolfie.png"), 250)
           .AddDefaultButton(OnDefaultsApplied)
           .AddButton(
