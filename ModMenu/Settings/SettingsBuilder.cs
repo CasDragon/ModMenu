@@ -5,6 +5,7 @@ using Kingmaker.PubSubSystem;
 using Kingmaker.Settings;
 using Kingmaker.UI;
 using Kingmaker.UI.SettingsUI;
+using Kingmaker.Utility;
 using ModMenu.NewTypes;
 using System;
 using System.Collections.Generic;
@@ -75,6 +76,8 @@ namespace ModMenu.Settings
   {
     private object Mod;
     private bool AllowDisabling;
+    private bool DoesNotCauseSaveDependency;
+    private string UniqueName;
     private LocalizedString ModName;
     private LocalizedString ModDescription;
     private string Author = "";
@@ -139,11 +142,16 @@ namespace ModMenu.Settings
     /// </summary>
     /// 
     /// <param name="modEntry">Your mod</param>
+    /// <param name="CausesSaveDependency">by default the mod is marked as creating save dependency and causing save files to break if the mod is disabled
+    /// set this parameter to true if you are sure this will not happen. It will be checked when sorting mods by <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>
+    /// to display in a separate category on the save-load screen for user's convinience. 
+    /// </param>
     /// <param name="allowDisabling">Set to true if you want to create a button to disable it</param>
-    public SettingsBuilder SetMod(OwlcatModification modEntry, bool allowDisabling = false)
+    public SettingsBuilder SetMod(OwlcatModification modEntry, bool CausesSaveDependency = true, bool allowDisabling = false)
     {
       Mod = modEntry;
       AllowDisabling = allowDisabling;
+      DoesNotCauseSaveDependency = !CausesSaveDependency;
       return this;
     }
 
@@ -155,11 +163,33 @@ namespace ModMenu.Settings
     /// </summary>
     /// 
     /// <param name="modEntry">Your mod</param>
+    /// <param name="CausesSaveDependency">by default the mod is marked as creating save dependency and causing save files to break if the mod is disabled
+    /// set this parameter to true if you are sure this will not happen. It will be checked when sorting mods by <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>
+    /// to display in a separate category on the save-load screen for user's convinience. 
+    /// </param>
     /// <param name="allowDisabling">Set to true if you want to create a button to disable it</param>
-    public SettingsBuilder SetMod(UnityModManager.ModEntry modEntry, bool allowDisabling = false)
+    public SettingsBuilder SetMod(UnityModManager.ModEntry modEntry, bool CausesSaveDependency = true, bool allowDisabling = false)
     {
       Mod = modEntry;
       AllowDisabling = allowDisabling;
+      DoesNotCauseSaveDependency = !CausesSaveDependency;
+      return this;
+    }
+
+    /// <summary>
+    /// If you are sure that your mod does not cause any sort of save dependency and save files won't get broken after disabling the mod,
+    /// use this method to mark your mod. It will be checked when sorting mods by <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>
+    /// to display in a separate category for user's convinience. 
+    /// USE THIS METHOD ONLY IF YOU DONT USE <see cref="SetMod(OwlcatModification, bool, bool)"/> or <see cref="SetMod(UnityModManager.ModEntry, bool, bool)"/>
+    /// </summary>
+    /// <param name="uniqueName">Unique name of your mod from <see cref="OwlcatModification.Manifest"/> or <see cref="UnityModManager.ModInfo"/></param>
+    public SettingsBuilder SetIsNotCausingSaveDependency(string uniqueName)
+    {
+      if (uniqueName.IsNullOrEmpty())
+      {
+        DoesNotCauseSaveDependency = true;
+        UniqueName = uniqueName;
+      }
       return this;
     }
 
@@ -420,13 +450,13 @@ namespace ModMenu.Settings
       Group.SettingsList = Settings.ToArray();
       Info Info;
       if (Mod is OwlcatModification OwlMod)
-        Info = new(OwlMod, AllowDisabling, ModName, ModDescription, modIllustration);
+        Info = new(OwlMod, AllowDisabling, ModName, ModDescription, modIllustration, DoesNotCauseSaveDependency);
       else if (Mod is UnityModManager.ModEntry UMMmod)
-        Info = new(UMMmod, AllowDisabling, ModName, ModDescription, modIllustration);
+        Info = new(UMMmod, AllowDisabling, ModName, ModDescription, modIllustration, DoesNotCauseSaveDependency);
       else if (ModName is not null)
-        Info = new(ModName, ModDescription, Version, Author, modIllustration);
+        Info = new(ModName, ModDescription, Version, Author, modIllustration, new(DoesNotCauseSaveDependency, UniqueName));
       else
-        Info = new(GroupList.ElementAt(0)?.Title ?? "");
+        Info = new(GroupList.ElementAt(0)?.Title ?? "", ModDescription, Version, Author, modIllustration, new(DoesNotCauseSaveDependency, UniqueName));
       return (GroupList, SettingsEntities, Info);
     }
 

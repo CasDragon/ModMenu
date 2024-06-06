@@ -4,6 +4,7 @@ using Kingmaker.Localization.Shared;
 using Kingmaker.Modding;
 using Kingmaker.UI.SettingsUI;
 using Kingmaker.Utility;
+using ModMenu.NewTypes.ModRecording;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -168,27 +169,31 @@ namespace ModMenu.Settings
       internal OwlcatModification OwlMod { get; }
       internal UnityModManager.ModEntry UMMMod { get; }
 
-      /// <param name="name">
-      /// Name of your mod displayed in the ModMenu dropdown. If you don't provide any, it will be Anonymous
-      /// </param>
-      /// <param name="description">
-      /// Description which will be displayed when user selects your mod in ModMenu dropdown
-      /// </param>
-      /// <param name="version">
-      /// Mod version to be displayed alongside the description
-      /// </param>
-      /// <param name="author">
-      /// Mod author's name to be displayed alongside the description
-      /// </param>
-      /// <param name="image">
-      /// Mod's icon to be displayed alongside the description
-      /// </param>
-      public Info(
+    /// <param name="name">
+    /// Name of your mod displayed in the ModMenu dropdown. If you don't provide any, it will be Anonymous
+    /// </param>
+    /// <param name="description">
+    /// Description which will be displayed when user selects your mod in ModMenu dropdown
+    /// </param>
+    /// <param name="version">
+    /// Mod version to be displayed alongside the description
+    /// </param>
+    /// <param name="author">
+    /// Mod author's name to be displayed alongside the description
+    /// </param>
+    /// <param name="image">
+    /// Mod's icon to be displayed alongside the description
+    /// </param>
+    /// <param name="notCauseDep">
+    /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+    /// </param>
+    public Info(
         LocalizedString name,
         LocalizedString description = null,
         string version = "",
         string author = "",
-        Sprite image = null)
+        Sprite image = null,
+        (bool value, string UniqueName) notCauseDep = default)
       {
         if (name is null) ModName = AnonymousMod;
         else ModName = name;
@@ -196,21 +201,29 @@ namespace ModMenu.Settings
         AuthorName = author;
         ModImage = image;
         LocalizedModDescription = description;
+        if (notCauseDep.value)
+        {          
+          if (!notCauseDep.UniqueName.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(notCauseDep.UniqueName))
+            SaveSlotWithModListVM.NamesExclusions.Add(notCauseDep.UniqueName);
+        };
       }
 
-      /// <param name="name">
-      /// Name of your mod which will be displayed in the ModMenu dropdown. If you don't provide any, it will displayed
-      /// as Anonymous
-      /// </param> 
-      /// <param name="description">
-      /// Description which will be displayed when user selects your mod in ModMenu dropdown
-      /// </param>
-      /// <param name="version">Mod version to be displayed alongside the description</param>
-      /// <param name="author">Mod author's name to be displayed alongside the description</param>
-      /// <param name="image">Mod's icon to be displayed alongside the description</param>
-      public Info(
-          string name, string description = "", string version = "", string author = "", Sprite image = null) :
-        this(Helpers.CreateString($"ModsMenu.{name}.Name", name), null, version, author, image) 
+    /// <param name="name">
+    /// Name of your mod which will be displayed in the ModMenu dropdown. If you don't provide any, it will displayed
+    /// as Anonymous
+    /// </param> 
+    /// <param name="description">
+    /// Description which will be displayed when user selects your mod in ModMenu dropdown
+    /// </param>
+    /// <param name="version">Mod version to be displayed alongside the description</param>
+    /// <param name="author">Mod author's name to be displayed alongside the description</param>
+    /// <param name="image">Mod's icon to be displayed alongside the description</param>
+    /// <param name="notCauseDep">
+    /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+    /// </param>
+    public Info(
+          string name, string description = "", string version = "", string author = "", Sprite image = null, (bool value, string UniqueName) notCauseDep = default) :
+        this(Helpers.CreateString($"ModsMenu.{name}.Name", name), null, version, author, image, notCauseDep) 
       {
         if (name.IsNullOrEmpty())
           AnonymousCounter++;
@@ -218,30 +231,34 @@ namespace ModMenu.Settings
         NonLocalizedModDescription = description; 
       }
 
-      /// <param name="owlcatModification">
-      /// If your mod is an OwlcatModification, you may provide a link to it in this case the constructor will use the
-      /// information from manifest to set mod's name, description, author and version.
-      /// </param>
-      /// <param name="allowModDisabling">
-      /// Set to true if you want to have a button in the ModMenu to disable your mod
-      /// </param>
-      /// <param name="localizedModName">
-      /// Localized name for your mod if you are not satisfied with the non localized name taken from the mod manifest
-      /// </param>
-      /// <param name="localizedModDescription">
-      /// Localized description for your mod if you are mot satisfied with the non localized description taken from the
-      /// mod manifest
-      /// </param>
-      /// <param name="image">Mod's icon to be displayed alongside the description</param>
-      /// <exception cref="ArgumentException">
-      /// You are not allowed to provide a null OwlcatModification when using this constructor
-      /// </exception>
-      public Info(
+    /// <param name="owlcatModification">
+    /// If your mod is an OwlcatModification, you may provide a link to it in this case the constructor will use the
+    /// information from manifest to set mod's name, description, author and version.
+    /// </param>
+    /// <param name="allowModDisabling">
+    /// Set to true if you want to have a button in the ModMenu to disable your mod
+    /// </param>
+    /// <param name="localizedModName">
+    /// Localized name for your mod if you are not satisfied with the non localized name taken from the mod manifest
+    /// </param>
+    /// <param name="localizedModDescription">
+    /// Localized description for your mod if you are mot satisfied with the non localized description taken from the
+    /// mod manifest
+    /// </param>
+    /// <param name="image">Mod's icon to be displayed alongside the description</param>
+    /// <exception cref="ArgumentException">
+    /// You are not allowed to provide a null OwlcatModification when using this constructor
+    /// </exception>
+    /// <param name="notCauseDep">
+    /// Mod will be recorded (in <see cref="SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+    /// </param>
+    public Info(
         OwlcatModification owlcatModification,
         bool allowModDisabling,
         LocalizedString localizedModName = null,
         LocalizedString localizedModDescription = null,
-        Sprite image = null)
+        Sprite image = null,
+        bool notCauseDep = false)
       {
         if (owlcatModification is null)
           throw new ArgumentException("Attempt to create ModInfo out of a null OwlcatModification");
@@ -251,6 +268,12 @@ namespace ModMenu.Settings
         OwlcatModificationManifest manifest = owlcatModification.Manifest;
         AuthorName = manifest.Author;
         VersionNumber = manifest.Version;
+        if (notCauseDep)
+        {
+          string Id = owlcatModification.Manifest.UniqueName;
+          if (!Id.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(Id))
+            SaveSlotWithModListVM.NamesExclusions.Add(Id);
+        };
 
         string uniqueName = manifest.UniqueName;
         if (uniqueName.IsNullOrEmpty())
@@ -276,19 +299,23 @@ namespace ModMenu.Settings
         ModImage = image;
       }
 
-      /// <param name="ummMod"></param>if your mod is an UMM mod, you may provide a link to it
-      /// in this case the constructor will use the information from manifest to set mod's name, author and version.
-      /// <param name="allowModDisabling"></param> Set to true if you want to have a button in the ModMenu to disable your mod
-      /// <param name="localizedModName"></param> Localized name for your mod if you are mot satisfied with the non localized name taken from the mod manifest
-      /// <param name="localizedModDescription"></param> Localized description for your mod
-      /// <param name="image"></param> Mod's icon to be displayed alongside the description
-      /// <exception cref="ArgumentException"></exception> You are not allowed to provide a null UnityModManager.ModEntry when using this constructor
-      public Info(
+    /// <param name="ummMod"></param>if your mod is an UMM mod, you may provide a link to it
+    /// in this case the constructor will use the information from manifest to set mod's name, author and version.
+    /// <param name="allowModDisabling"></param> Set to true if you want to have a button in the ModMenu to disable your mod
+    /// <param name="localizedModName"></param> Localized name for your mod if you are mot satisfied with the non localized name taken from the mod manifest
+    /// <param name="localizedModDescription"></param> Localized description for your mod
+    /// <param name="image"></param> Mod's icon to be displayed alongside the description
+    /// <param name="notCauseDep">
+    /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+    /// </param>
+    /// <exception cref="ArgumentException"></exception> You are not allowed to provide a null UnityModManager.ModEntry when using this constructor
+    public Info(
         ModEntry ummMod,
         bool allowModDisabling,
         LocalizedString localizedModName = null,
         LocalizedString localizedModDescription = null,
-        Sprite image = null)
+        Sprite image = null, 
+        bool notCauseDep = false)
       {
         if (ummMod is null)
           throw new ArgumentException("Attempt to create ModInfo out of a null UMM mod");
@@ -298,6 +325,12 @@ namespace ModMenu.Settings
         UnityModManager.ModInfo info = ummMod.Info;
         AuthorName = info.Author;
         VersionNumber = info.Version;
+        if (notCauseDep)
+        {
+          string Id = ummMod.Info.Id;
+          if (!Id.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(Id))
+            SaveSlotWithModListVM.NamesExclusions.Add(Id);
+        };
 
         string uniqueName = info.Id;
         if (uniqueName.IsNullOrEmpty())
