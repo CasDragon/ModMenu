@@ -17,6 +17,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 using Kingmaker.Modding;
+using UnityModManagerNet;
 
 namespace ModMenu.NewTypes.ModRecording
 {
@@ -84,25 +85,29 @@ namespace ModMenu.NewTypes.ModRecording
 
     public void OnUMMModStateChanged(ModEntry entry, bool IsBatch)
     {
-      //Main.Logger.Log($"SaveSlotWithModListVM Running OnModStateChanged for save slot {Reference?.Name ?? "NULL"} for mod {entry.Info.Id}");
+      Main.Logger.Log($"SaveSlotWithModListVM Running OnModStateChanged for save slot {Reference?.Name ?? "NULL"} for mod {entry.Info.Id}");
       var m = UMMMods.FirstOrDefault(m => m.mod == entry);
       if (m is null)
+      {
+        if (BoundModRecordView != null)
+          BoundModRecordView.Refresh();
         return;
+      }
       m.UpdateState();
       Refresh();
-      if (BoundModRecordView != null)
-        BoundModRecordView.Refresh();
     }
     public void OnOMMModStateChanged(string entry, bool IsBatch)
     {
-      //Main.Logger.Log($"SaveSlotWithModListVM Running OnModStateChanged for save slot {Reference?.Name ?? "NULL"}");
+      Main.Logger.Log($"SaveSlotWithModListVM Running OnModStateChanged for save slot {Reference?.Name ?? "NULL"}");
       var m = OwlMods.FirstOrDefault(m => m.record.Id == entry);
       if (m is null)
+      {
+        if (BoundModRecordView != null)
+          BoundModRecordView.Refresh();
         return;
+      }
       m.UpdateState();
-      Refresh();
-      if (BoundModRecordView != null)
-        BoundModRecordView.Refresh(); ;
+      Refresh(); 
     }
     internal void Refresh()
     {
@@ -127,9 +132,30 @@ namespace ModMenu.NewTypes.ModRecording
         BoundModRecordView.Refresh();
     }
 
+    [HarmonyTargetMethods]
+    static IEnumerable<MethodInfo> TargetMethods()
+    {
+      yield return typeof(SaveLoadVM).GetMethod(nameof(SaveLoadVM.UpdateSavesCollection), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+      var toybox = UnityModManager.modEntries.FirstOrDefault(mod => mod.Info.Id.Contains("ToyBox"))?.Assembly;
+      if (toybox != null)
+      {
+        Main.Logger.Log("Detected toybox, will try to add SaveLoadViews.SaveLoadVMPatch.UpdateSavesCollection method to patches"); // it's a bool Prefix that skips the original >_<
 
+        var method = AccessTools.Method(AccessTools.TypeByName("SaveLoadVMPatch"), "UpdateSavesCollection");
 
-    [HarmonyPatch(typeof(SaveLoadVM), nameof(SaveLoadVM.UpdateSavesCollection))]
+        if (method is not null)
+        {
+          Main.Logger.Log($"Method was found");
+          yield return method;
+        }
+        else
+          Main.Logger.Warning($"Method of Enhanced Saves was not found! Display of mod record is likely to fail.");
+      }
+      else
+        Main.Logger.Log($"Detected toybox NOT.");
+    }
+
+    //[HarmonyPatch(typeof(SaveLoadVM), nameof(SaveLoadVM.UpdateSavesCollection))]
     [HarmonyTranspiler]
     static IEnumerable<CodeInstruction> SaveLoadVM_UpdateSavesCollection_PatchToConstructSlotsWithModRecord(IEnumerable<CodeInstruction> instructions)
     {
