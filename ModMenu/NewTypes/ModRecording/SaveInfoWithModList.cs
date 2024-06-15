@@ -88,12 +88,26 @@ namespace ModMenu.NewTypes.ModRecording
     }
 
     [HarmonyPatch(typeof(SaveManager), nameof(SaveManager.LoadZipSave))]
-    [HarmonyPostfix]
-    static void ReadRecordedModList(SaveInfo __result)
+    [HarmonyTranspiler]
+    static IEnumerable<CodeInstruction> ReadRecordedModList_Transpiler (IEnumerable<CodeInstruction> instructions)
+    {
+      foreach (var instruction in instructions)
+      {
+        if (instruction.Calls(typeof(SaveInfo).GetProperty(nameof(SaveInfo.Saver)).SetMethod))
+        {
+          yield return new CodeInstruction(OpCodes.Dup);
+          yield return new CodeInstruction(OpCodes.Ldloc_2);
+          yield return CodeInstruction.Call((ISaver saver, SaveInfo __result) => ReadRecordedModList(saver, __result));
+        }
+        yield return instruction;
+      }
+    }
+
+
+    static void ReadRecordedModList(ISaver saver, SaveInfo __result)
     {
       try
       {
-        var saver = __result?.Saver;
         if (saver is null)
         {
           Main.Logger.Warning($"Save file {__result?.Name ?? "NULL"} has null saver! Can't read the mod list");
