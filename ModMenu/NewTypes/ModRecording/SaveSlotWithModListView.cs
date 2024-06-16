@@ -111,6 +111,7 @@ namespace ModMenu.NewTypes.ModRecording
           var newPrefab = a.gameObject.AddComponent<SaveSlotWithModListView>();
           MemberWiseCloneView(newPrefab, a);
           DestroyImmediate(a);
+          GameObject.DontDestroyOnLoad(newPrefab.gameObject);
           var Pic = newPrefab.transform.Find("Picture");
           var QuickMark = Pic.Find("QuickSaveMark");
           var Mark = GameObject.Instantiate(QuickMark, Pic, false);
@@ -150,28 +151,29 @@ namespace ModMenu.NewTypes.ModRecording
 
       static bool FixVirtualListIndices(bool previousResult, Type t, VirtualListViewsFabric fabric)
       {
-        if (previousResult)
-          return true;
         if (t != typeof(SaveSlotWithModListVM))
-          return false;
-        var code = fabric.GetElementHashCode(t, 0);
-        var anotherCode = fabric.GetElementHashCode(typeof(SaveSlotVM), 0);
-        var Index = fabric.m_Prefabs.Length;
-        fabric.m_Indices.Add(code, Index);
-        var list = new IVirtualListElementView[Index + 1];
-        for (var i = 0; i < Index; i++)
-          list[i] = fabric.m_Prefabs[i];
-        var oldPrefab = fabric.m_Prefabs[fabric.m_Indices[anotherCode]] as SaveSlotPCView;
-        var newPrefab = TryGetConfig(oldPrefab);
+          return previousResult;
+        if (!previousResult)
+        {
+          var code = fabric.GetElementHashCode(t, 0);
+          var anotherCode = fabric.GetElementHashCode(typeof(SaveSlotVM), 0);
+          var Index = fabric.m_Prefabs.Length;
+          fabric.m_Indices.Add(code, Index);
+          var list = new IVirtualListElementView[Index + 1];
+          for (var i = 0; i < Index; i++)
+            list[i] = fabric.m_Prefabs[i];
+          var oldPrefab = fabric.m_Prefabs[fabric.m_Indices[anotherCode]] as SaveSlotPCView;
+          var newPrefab = TryGetConfig(oldPrefab);
 
-        list[Index] = newPrefab;
-        fabric.m_Prefabs = list;
-        Index = fabric.m_Pools.Length;
-        var queues = new Queue<IVirtualListElementView>[Index + 1];
-        for (var i = 0; i < Index; i++)
-          queues[i] = fabric.m_Pools[i];
-        queues[Index] = new();
-        fabric.m_Pools = queues;
+          list[Index] = newPrefab;
+          fabric.m_Prefabs = list;
+          Index = fabric.m_Pools.Length;
+          var pools = new Queue<IVirtualListElementView>[Index + 1];
+          for (var i = 0; i < Index; i++)
+            pools[i] = fabric.m_Pools[i];
+          pools[Index] = new();
+          fabric.m_Pools = pools; 
+        }
         return true;
       }
 
