@@ -13,6 +13,7 @@ using Kingmaker.EntitySystem.Persistence.SavesStorage;
 using Newtonsoft.Json;
 using UnityModManagerNet;
 using Kingmaker.Modding;
+using Kingmaker.EntitySystem.Persistence.Versioning;
 
 namespace ModMenu.NewTypes.ModRecording
 {
@@ -101,6 +102,13 @@ namespace ModMenu.NewTypes.ModRecording
         }
         yield return instruction;
       }
+    }
+
+    [HarmonyPatch(typeof(JsonUpgradeSystem), nameof(JsonUpgradeSystem.ShouldUpgrade))]
+    [HarmonyPrefix]
+    static bool JsonUpgradeSystem_ShouldUpgrade(string fileName)
+    {
+      return !fileName.StartsWith("header.json");
     }
 
 
