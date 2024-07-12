@@ -142,162 +142,167 @@ namespace ModMenu.Settings
 
     }
 
+    public override string ToString()
+    {
+      return ModInfo.ToString();
+    }
+
   }
     /// <summary>
     /// Structure containing information required to display the ModEntry in the ModMenu dropdown (such as mod's info)
     /// </summary>
-    public struct Info
+  public struct Info
+  {
+    private static readonly LocalizedString AnonymousMod =
+      Helpers.CreateString("ModsMenu.AnonymousMod", "Anonymous Mod", ruRU: "Безымянный мод", zhCN: "匿名模组", deDE: "Anonymer Mod", frFR: "Mod anonyme");
+    private static readonly LocalizedString stringAuthor =
+      Helpers.CreateString("ModsMenu.stringAuthor", "Author", ruRU: "Создатель", zhCN: "作者", deDE: "Autor", frFR: "Créateur");
+    private static readonly LocalizedString stringVer =
+      Helpers.CreateString("ModsMenu.stringVer", "Version", ruRU: "Версия", zhCN: "版本", deDE: "Version", frFR: "Version");
+    private static int AnonymousCounter = 0;
+
+    public Sprite ModImage { get; private set; }
+    public LocalizedString ModName { get; private set; }
+    public string VersionNumber { get; private set; }
+    public string AuthorName { get; private set; }
+    public LocalizedString LocalizedModDescription { get; private set; }
+    public string NonLocalizedModDescription { get; private set; }
+    private string ModDescription { get { return LocalizedModDescription ?? NonLocalizedModDescription; } }
+    private string m_CachedDescription;
+    private Locale m_LastLocale;
+    internal bool AllowModDisabling { get; set; }
+    internal OwlcatModification OwlMod { get; }
+    internal UnityModManager.ModEntry UMMMod { get; }
+
+  /// <param name="name">
+  /// Name of your mod displayed in the ModMenu dropdown. If you don't provide any, it will be Anonymous
+  /// </param>
+  /// <param name="description">
+  /// Description which will be displayed when user selects your mod in ModMenu dropdown
+  /// </param>
+  /// <param name="version">
+  /// Mod version to be displayed alongside the description
+  /// </param>
+  /// <param name="author">
+  /// Mod author's name to be displayed alongside the description
+  /// </param>
+  /// <param name="image">
+  /// Mod's icon to be displayed alongside the description
+  /// </param>
+  /// <param name="notCauseDep">
+  /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+  /// </param>
+  public Info(
+      LocalizedString name,
+      LocalizedString description = null,
+      string version = "",
+      string author = "",
+      Sprite image = null,
+      (bool value, string UniqueName) notCauseDep = default)
     {
-      private static readonly LocalizedString AnonymousMod =
-        Helpers.CreateString("ModsMenu.AnonymousMod", "Anonymous Mod", ruRU: "Безымянный мод", zhCN: "匿名模组", deDE: "Anonymer Mod", frFR: "Mod anonyme");
-      private static readonly LocalizedString stringAuthor =
-        Helpers.CreateString("ModsMenu.stringAuthor", "Author", ruRU: "Создатель", zhCN: "作者", deDE: "Autor", frFR: "Créateur");
-      private static readonly LocalizedString stringVer =
-        Helpers.CreateString("ModsMenu.stringVer", "Version", ruRU: "Версия", zhCN: "版本", deDE: "Version", frFR: "Version");
-      private static int AnonymousCounter = 0;
+      if (name is null) ModName = AnonymousMod;
+      else ModName = name;
+      VersionNumber = version;
+      AuthorName = author;
+      ModImage = image;
+      LocalizedModDescription = description;
+      if (notCauseDep.value)
+      {          
+        if (!notCauseDep.UniqueName.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(notCauseDep.UniqueName))
+          SaveSlotWithModListVM.NamesExclusions.Add(notCauseDep.UniqueName);
+      };
+    }
 
-      public Sprite ModImage { get; private set; }
-      public LocalizedString ModName { get; private set; }
-      public string VersionNumber { get; private set; }
-      public string AuthorName { get; private set; }
-      public LocalizedString LocalizedModDescription { get; private set; }
-      public string NonLocalizedModDescription { get; private set; }
-      private string ModDescription { get { return LocalizedModDescription ?? NonLocalizedModDescription; } }
-      private string m_CachedDescription;
-      private Locale m_LastLocale;
-      internal bool AllowModDisabling { get; set; }
-      internal OwlcatModification OwlMod { get; }
-      internal UnityModManager.ModEntry UMMMod { get; }
+  /// <param name="name">
+  /// Name of your mod which will be displayed in the ModMenu dropdown. If you don't provide any, it will displayed
+  /// as Anonymous
+  /// </param> 
+  /// <param name="description">
+  /// Description which will be displayed when user selects your mod in ModMenu dropdown
+  /// </param>
+  /// <param name="version">Mod version to be displayed alongside the description</param>
+  /// <param name="author">Mod author's name to be displayed alongside the description</param>
+  /// <param name="image">Mod's icon to be displayed alongside the description</param>
+  /// <param name="notCauseDep">
+  /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+  /// </param>
+  public Info(
+        string name, string description = "", string version = "", string author = "", Sprite image = null, (bool value, string UniqueName) notCauseDep = default) :
+      this(Helpers.CreateString($"ModsMenu.{name}.Name", name), null, version, author, image, notCauseDep) 
+    {
+      if (name.IsNullOrEmpty())
+        AnonymousCounter++;
 
-    /// <param name="name">
-    /// Name of your mod displayed in the ModMenu dropdown. If you don't provide any, it will be Anonymous
-    /// </param>
-    /// <param name="description">
-    /// Description which will be displayed when user selects your mod in ModMenu dropdown
-    /// </param>
-    /// <param name="version">
-    /// Mod version to be displayed alongside the description
-    /// </param>
-    /// <param name="author">
-    /// Mod author's name to be displayed alongside the description
-    /// </param>
-    /// <param name="image">
-    /// Mod's icon to be displayed alongside the description
-    /// </param>
-    /// <param name="notCauseDep">
-    /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
-    /// </param>
-    public Info(
-        LocalizedString name,
-        LocalizedString description = null,
-        string version = "",
-        string author = "",
-        Sprite image = null,
-        (bool value, string UniqueName) notCauseDep = default)
-      {
-        if (name is null) ModName = AnonymousMod;
-        else ModName = name;
-        VersionNumber = version;
-        AuthorName = author;
-        ModImage = image;
-        LocalizedModDescription = description;
-        if (notCauseDep.value)
-        {          
-          if (!notCauseDep.UniqueName.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(notCauseDep.UniqueName))
-            SaveSlotWithModListVM.NamesExclusions.Add(notCauseDep.UniqueName);
-        };
-      }
+      NonLocalizedModDescription = description; 
+    }
 
-    /// <param name="name">
-    /// Name of your mod which will be displayed in the ModMenu dropdown. If you don't provide any, it will displayed
-    /// as Anonymous
-    /// </param> 
-    /// <param name="description">
-    /// Description which will be displayed when user selects your mod in ModMenu dropdown
-    /// </param>
-    /// <param name="version">Mod version to be displayed alongside the description</param>
-    /// <param name="author">Mod author's name to be displayed alongside the description</param>
-    /// <param name="image">Mod's icon to be displayed alongside the description</param>
-    /// <param name="notCauseDep">
-    /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
-    /// </param>
-    public Info(
-          string name, string description = "", string version = "", string author = "", Sprite image = null, (bool value, string UniqueName) notCauseDep = default) :
-        this(Helpers.CreateString($"ModsMenu.{name}.Name", name), null, version, author, image, notCauseDep) 
-      {
-        if (name.IsNullOrEmpty())
-          AnonymousCounter++;
+   /// <param name="owlcatModification">
+   /// If your mod is an OwlcatModification, you may provide a link to it in this case the constructor will use the
+   /// information from manifest to set mod's name, description, author and version.
+   /// </param>
+   /// <param name="allowModDisabling">
+   /// Set to true if you want to have a button in the ModMenu to disable your mod
+   /// </param>
+   /// <param name="localizedModName">
+   /// Localized name for your mod if you are not satisfied with the non localized name taken from the mod manifest
+   /// </param>
+   /// <param name="localizedModDescription">
+   /// Localized description for your mod if you are mot satisfied with the non localized description taken from the
+   /// mod manifest
+   /// </param>
+   /// <param name="image">Mod's icon to be displayed alongside the description</param>
+   /// <exception cref="ArgumentException">
+   /// You are not allowed to provide a null OwlcatModification when using this constructor
+   /// </exception>
+   /// <param name="notCauseDep">
+   /// Mod will be recorded (in <see cref="SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
+   /// </param>
+  public Info(
+      OwlcatModification owlcatModification,
+      bool allowModDisabling,
+      LocalizedString localizedModName = null,
+      LocalizedString localizedModDescription = null,
+      Sprite image = null,
+      bool notCauseDep = false)
+  {
+    if (owlcatModification is null)
+      throw new ArgumentException("Attempt to create ModInfo out of a null OwlcatModification");
 
-        NonLocalizedModDescription = description; 
-      }
+    OwlMod = owlcatModification;
+    AllowModDisabling = allowModDisabling;
+    OwlcatModificationManifest manifest = owlcatModification.Manifest;
+    AuthorName = manifest.Author;
+    VersionNumber = manifest.Version;
+    if (notCauseDep)
+    {
+      string Id = owlcatModification.Manifest.UniqueName;
+      if (!Id.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(Id))
+        SaveSlotWithModListVM.NamesExclusions.Add(Id);
+    };
 
-    /// <param name="owlcatModification">
-    /// If your mod is an OwlcatModification, you may provide a link to it in this case the constructor will use the
-    /// information from manifest to set mod's name, description, author and version.
-    /// </param>
-    /// <param name="allowModDisabling">
-    /// Set to true if you want to have a button in the ModMenu to disable your mod
-    /// </param>
-    /// <param name="localizedModName">
-    /// Localized name for your mod if you are not satisfied with the non localized name taken from the mod manifest
-    /// </param>
-    /// <param name="localizedModDescription">
-    /// Localized description for your mod if you are mot satisfied with the non localized description taken from the
-    /// mod manifest
-    /// </param>
-    /// <param name="image">Mod's icon to be displayed alongside the description</param>
-    /// <exception cref="ArgumentException">
-    /// You are not allowed to provide a null OwlcatModification when using this constructor
-    /// </exception>
-    /// <param name="notCauseDep">
-    /// Mod will be recorded (in <see cref="SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
-    /// </param>
-    public Info(
-        OwlcatModification owlcatModification,
-        bool allowModDisabling,
-        LocalizedString localizedModName = null,
-        LocalizedString localizedModDescription = null,
-        Sprite image = null,
-        bool notCauseDep = false)
-      {
-        if (owlcatModification is null)
-          throw new ArgumentException("Attempt to create ModInfo out of a null OwlcatModification");
+    string uniqueName = manifest.UniqueName;
+    if (uniqueName.IsNullOrEmpty())
+    {
+      uniqueName = "AnonymousMod" + AnonymousCounter;
+      AnonymousCounter++;
+    }
 
-        OwlMod = owlcatModification;
-        AllowModDisabling = allowModDisabling;
-        OwlcatModificationManifest manifest = owlcatModification.Manifest;
-        AuthorName = manifest.Author;
-        VersionNumber = manifest.Version;
-        if (notCauseDep)
-        {
-          string Id = owlcatModification.Manifest.UniqueName;
-          if (!Id.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(Id))
-            SaveSlotWithModListVM.NamesExclusions.Add(Id);
-        };
+    if (localizedModName is not null && localizedModName.ToString().IsNullOrEmpty() is false) 
+      ModName = localizedModName;
+    else
+    {
+      ModName = manifest.DisplayName.IsNullOrEmpty() is false
+        ? Helpers.CreateString($"ModsMenu.{uniqueName}.ModName", manifest.DisplayName)
+        : AnonymousMod;
+    }
 
-        string uniqueName = manifest.UniqueName;
-        if (uniqueName.IsNullOrEmpty())
-        {
-          uniqueName = "AnonymousMod" + AnonymousCounter;
-          AnonymousCounter++;
-        }
+    if (localizedModDescription is not null && localizedModDescription.ToString().IsNullOrEmpty() is false)
+      LocalizedModDescription = localizedModDescription;
+    else if (manifest.Description.IsNullOrEmpty() is false)
+      NonLocalizedModDescription = manifest.Description;
 
-        if (localizedModName is not null && localizedModName.ToString().IsNullOrEmpty() is false) 
-          ModName = localizedModName;
-        else
-        {
-          ModName = manifest.DisplayName.IsNullOrEmpty() is false
-            ? Helpers.CreateString($"ModsMenu.{uniqueName}.ModName", manifest.DisplayName)
-            : AnonymousMod;
-        }
-
-        if (localizedModDescription is not null && localizedModDescription.ToString().IsNullOrEmpty() is false)
-          LocalizedModDescription = localizedModDescription;
-        else if (manifest.Description.IsNullOrEmpty() is false)
-          NonLocalizedModDescription = Helpers.CreateString($"ModsMenu.{uniqueName}.Description", manifest.DisplayName);
-
-        ModImage = image;
-      }
+    ModImage = image;
+  }
 
     /// <param name="ummMod"></param>if your mod is an UMM mod, you may provide a link to it
     /// in this case the constructor will use the information from manifest to set mod's name, author and version.
@@ -309,51 +314,51 @@ namespace ModMenu.Settings
     /// Mod will be recorded (in <see cref="NewTypes.ModRecording.SaveInfoWithModList.ModRecord"/>) as one not causing dependency for save files for user convinience
     /// </param>
     /// <exception cref="ArgumentException"></exception> You are not allowed to provide a null UnityModManager.ModEntry when using this constructor
-    public Info(
-        ModEntry ummMod,
-        bool allowModDisabling,
-        LocalizedString localizedModName = null,
-        LocalizedString localizedModDescription = null,
-        Sprite image = null, 
-        bool notCauseDep = false)
-      {
-        if (ummMod is null)
-          throw new ArgumentException("Attempt to create ModInfo out of a null UMM mod");
+  public Info(
+    ModEntry ummMod,
+    bool allowModDisabling,
+    LocalizedString localizedModName = null,
+    LocalizedString localizedModDescription = null,
+    Sprite image = null, 
+    bool notCauseDep = false)
+  {
+    if (ummMod is null)
+      throw new ArgumentException("Attempt to create ModInfo out of a null UMM mod");
 
-        UMMMod = ummMod;
-        AllowModDisabling = allowModDisabling;
-        UnityModManager.ModInfo info = ummMod.Info;
-        AuthorName = info.Author;
-        VersionNumber = info.Version;
-        if (notCauseDep)
-        {
-          string Id = ummMod.Info.Id;
-          if (!Id.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(Id))
-            SaveSlotWithModListVM.NamesExclusions.Add(Id);
-        };
+    UMMMod = ummMod;
+    AllowModDisabling = allowModDisabling;
+    UnityModManager.ModInfo info = ummMod.Info;
+    AuthorName = info.Author;
+    VersionNumber = info.Version;
+    if (notCauseDep)
+    {
+      string Id = ummMod.Info.Id;
+      if (!Id.IsNullOrEmpty() && !SaveSlotWithModListVM.NamesExclusions.Contains(Id))
+        SaveSlotWithModListVM.NamesExclusions.Add(Id);
+    };
 
-        string uniqueName = info.Id;
-        if (uniqueName.IsNullOrEmpty())
-        {
-          uniqueName = "AnonymousMod" + AnonymousCounter;
-          AnonymousCounter++;
-        }
-        AuthorName = info.Author;
+    string uniqueName = info.Id;
+    if (uniqueName.IsNullOrEmpty())
+    {
+      uniqueName = "AnonymousMod" + AnonymousCounter;
+      AnonymousCounter++;
+    }
+    AuthorName = info.Author;
 
-        if (localizedModName is not null && localizedModName.ToString().IsNullOrEmpty() is false)
-          ModName = localizedModName;
-        else if (info.DisplayName.IsNullOrEmpty() is false)
-          ModName = Helpers.CreateString($"ModsMenu.{uniqueName}.ModName", info.DisplayName);
-        else
-          ModName = AnonymousMod;
+    if (localizedModName is not null && localizedModName.ToString().IsNullOrEmpty() is false)
+      ModName = localizedModName;
+    else if (info.DisplayName.IsNullOrEmpty() is false)
+      ModName = Helpers.CreateString($"ModsMenu.{uniqueName}.ModName", info.DisplayName);
+    else
+      ModName = AnonymousMod;
 
-        if (localizedModDescription is not null && localizedModDescription.ToString().IsNullOrEmpty() is false)
-          LocalizedModDescription = localizedModDescription;
+    if (localizedModDescription is not null && localizedModDescription.ToString().IsNullOrEmpty() is false)
+      LocalizedModDescription = localizedModDescription;
 
-        ModImage = image;
-      }
+    ModImage = image;
+  }
 
-      internal string GenerateDescription()
+    internal string GenerateDescription()
       {
         if (!m_CachedDescription.IsNullOrEmpty() && m_LastLocale == LocalizationManager.CurrentLocale)
           return m_CachedDescription;
@@ -369,8 +374,8 @@ namespace ModMenu.Settings
             result += $"<align=\"center\"><size=60%><b>({stringVer}: {VersionNumber})</b></size></align>\n";
 
           //result = $"<align=\"center\"><size=60%><b>{result}</b></size></align>\n";
-          result += "\n";
-          result += $"{ModDescription}";
+          if (!string.IsNullOrEmpty(VersionNumber))
+            result += $"\n{ModDescription}";
           m_CachedDescription= result;
           m_LastLocale = LocalizationManager.CurrentLocale;
           return result;
@@ -382,5 +387,15 @@ namespace ModMenu.Settings
           return "We fucked up generating description!";
         }
       }
+
+    public override string ToString()
+    {
+      if (UMMMod is not null)
+        return $"UMMMod {UMMMod.Info?.Id ?? "nameless mod"}";
+      else if (OwlMod is not null)
+        return $"OwlMod {OwlMod.Manifest?.UniqueName ?? "nameless mod"}";
+      else
+        return ModName;
     }
+  }
 }
