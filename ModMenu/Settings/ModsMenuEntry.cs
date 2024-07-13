@@ -347,7 +347,7 @@ namespace ModMenu.Settings
 
     if (localizedModName is not null && localizedModName.ToString().IsNullOrEmpty() is false)
       ModName = localizedModName;
-    else if (info.DisplayName.IsNullOrEmpty() is false)
+    else if (!info.DisplayName.IsNullOrEmpty())
       ModName = Helpers.CreateString($"ModsMenu.{uniqueName}.ModName", info.DisplayName);
     else
       ModName = AnonymousMod;

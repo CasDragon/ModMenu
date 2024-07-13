@@ -455,8 +455,10 @@ namespace ModMenu.Settings
         Info = new(UMMmod, AllowDisabling, ModName, ModDescription, modIllustration, DoesNotCauseSaveDependency);
       else if (ModName is not null)
         Info = new(ModName, ModDescription, Version, Author, modIllustration, new(DoesNotCauseSaveDependency, UniqueName));
+      else if (GroupList.ElementAt(0)?.Title is LocalizedString localizedName)
+        Info = new(localizedName, ModDescription, Version, Author, modIllustration, new(DoesNotCauseSaveDependency, UniqueName));
       else
-        Info = new(GroupList.ElementAt(0)?.Title ?? "", ModDescription, Version, Author, modIllustration, new(DoesNotCauseSaveDependency, UniqueName));
+        Info = new("", ModDescription, Version, Author, modIllustration, new(DoesNotCauseSaveDependency, UniqueName));
       return (GroupList, SettingsEntities, Info);
     }
 
