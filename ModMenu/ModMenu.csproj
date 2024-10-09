@@ -1,150 +1,64 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" InitialTargets="GenerateCustomPropsFile">
+	<Import Project="$(SolutionDir)GamePath.props" Condition="Exists('$(SolutionDir)GamePath.props')" />
 
-  <PropertyGroup>
-    <!--
-			Enables the latest C# language features. Runtime features are limited by the .NET framework version, so some
-			features (e.g. Default Interfaces) are not available.
-		-->
-    <LangVersion>latest</LangVersion>
-    <!-- Latest .NET version supported by Wrath / Unity -->
-    <TargetFramework>net481</TargetFramework>
-
-    <!-- Needed to use publicized assembly -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
-    <AssemblyName>ModMenu</AssemblyName>
-    <RootNamespace>ModMenu</RootNamespace>
-    
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Assets\**" />
-    <Compile Remove="lib\**" />
-    <EmbeddedResource Remove="Assets\**" />
-    <EmbeddedResource Remove="lib\**" />
-    <None Remove="Assets\**" />
-    <None Remove="lib\**" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-    <None Remove="WittleWolfie.png" />
-	<None Remove="UI_CharGen_IconDislike.png" />
-	<None Remove="UI_CharGen_IconLike.png" />
-	<None Remove="UI_journal_iconok_new2.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="NewTypes\ModRecording\Icons\UI_CharGen_IconDislike.png" />
-    <None Remove="NewTypes\ModRecording\Icons\UI_CharGen_IconLike.png" />
-    <None Remove="NewTypes\ModRecording\Icons\UI_journal_iconok_new2.png" />
-    <None Remove="NewTypes\ModRecording\Icons\UI_QuestNotification_IconFail.png" />
-    <None Remove="NewTypes\ModRecording\Icons\UI_QuestNotification_IconNew.png" />
-    <None Remove="NewTypes\ModRecording\Icons\UI_QuestNotification_IconOk.png" />
-    <None Remove="TestSettingsIllustration.png" />
-    <None Remove="TestSettingsIllustration2.png" />
-    <None Remove="UI_QuestNotification_IconFail.png" />
-  </ItemGroup>
-
-
-  <ItemGroup>
-	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_CharGen_IconDislike.png" />
-	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_CharGen_IconLike.png" />
-	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_journal_iconok_new2.png" />
-	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_QuestNotification_IconFail.png" />
-	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_QuestNotification_IconNew.png" />
-	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_QuestNotification_IconOk.png" />
-	  <EmbeddedResource Include="TestSettingsIllustration.png" />
-	  <EmbeddedResource Include="TestSettingsIllustration2.png" />
-	  <EmbeddedResource Include="WittleWolfie.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AssemblyPublicizer" Version="*">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Main Wrath Assembly, Publicized -->
-    <Reference Include="Assembly-CSharp.dll">
-      <HintPath>$(SolutionDir)lib\Assembly-CSharp_public.dll</HintPath>
-    </Reference>
-    <Reference Include="Owlcat.Runtime.UI.dll">
-      <HintPath>$(SolutionDir)lib\Owlcat.Runtime.UI_public.dll</HintPath>
-    </Reference>
-	<Reference Include="Unity.TextMeshPro">
-	  <HintPath>$(SolutionDir)lib\Unity.TextMeshPro_public.dll</HintPath>
-	</Reference>
-	<Reference Include="UnityModManager.dll">
-	  <HintPath>$(SolutionDir)lib\UnityModManager_public.dll</HintPath>
-	</Reference>
-
-    <!-- Wrath Assemblies -->
-    <Reference Include="Assembly-CSharp-firstpass.dll">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="Owlcat.Runtime.Validation.dll">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\Owlcat.Runtime.Validation.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule.dll">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule.dll">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI.dll">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UniRx.dll">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UniRx.dll</HintPath>
-    </Reference>
-	<Reference Include="Newtonsoft.Json">
-	  <HintPath>$(WrathPath)\Wrath_Data\Managed\Newtonsoft.Json.dll</HintPath>
-	</Reference>
-
-    <!-- Harmony -->
-    <Reference Include="0Harmony">
-      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityModManager\0Harmony.dll</HintPath>
-    </Reference>
-	  <!-- UMM is moved into Publicized section -->
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Info.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <!-- Generates Assembly-CSharp_public.dll and Owlcat.Runtime.UI_public.dll -->
-	<Target Name="Publicize" AfterTargets="Clean">
+	<PropertyGroup>
+		<TargetFramework>net481</TargetFramework>
+		<AssemblyName>ModMenu</AssemblyName>
+		<Description>Mod Menu</Description>
+		<Version>2.0.2</Version>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<LangVersion>latest</LangVersion>
+		<RootNamespace>ModMenu</RootNamespace>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<RestoreAdditionalProjectSources>https://api.nuget.org/v3/index.json</RestoreAdditionalProjectSources>
+		<WrathData>$(LocalAppData)Low\Owlcat Games\Pathfinder Wrath Of The Righteous</WrathData>
+	</PropertyGroup>
+	<ItemGroup>
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Unity*.dll" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Core*.dll" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Owlcat*.dll" Publicize="true" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Assembly-CSharp.dll*" Publicize="true" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\UnityModManager\UnityModManager.dll*" Publicize="true" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Newtonsoft.Json.dll*" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\UniRx.dll*" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\UnityModManager\0Harmony.dll*" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Unity.TextMeshPro.dll" Publicize="true" Private="false" />
+		<Reference Include="$(WrathInstallDir)\Wrath_Data\Managed\Owlcat.Runtime.UI.dll" Publicize="true" Private="false" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="Info.json" CopyToOutputDirectory="PreserveNewest" />
+		<None Remove="NewTypes\ModRecording\Icons\*.png"/>
+		<EmbeddedResource Include="NewTypes\ModRecording\Icons\*.png" />
+	</ItemGroup>
+	<Target Name="Deploy" AfterTargets="Build">
 		<ItemGroup>
-      <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\Owlcat.Runtime.UI.dll" />
-      <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\Assembly-CSharp.dll" />
-	  <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\Unity.TextMeshPro.dll" />
-	  <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\UnityModManager\UnityModManager.dll" />
-			
-    </ItemGroup>
+			<Files Include="$(TargetDir)\**\*.*" />
+		</ItemGroup>
 
-    <PublicizeTask InputAssemblies="@(Assemblies)" OutputDir="$(SolutionDir)lib\" />
-  </Target>
+		<Copy SourceFiles="@(Files)" DestinationFiles="@(Files->'$(WrathInstallDir)\Mods\$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')" />
+		<ZipDirectory SourceDirectory="$(MSBuildProjectDirectory)\$(OutputPath)" DestinationFile="$(MSBuildProjectDirectory)\$(OutputPath)\..\$(AssemblyName)-$(Version).zip" Overwrite="true" />
+	</Target>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+		<PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" IncludeAssets="build; contentfiles" Version="0.4.2" PrivateAssets="all" />
+	</ItemGroup>
+	<Target Name="GenerateCustomPropsFile" Condition="$(WrathInstallDir) == ''">
+		<Exec Command="findstr /C:&quot;Mono path[0]&quot; &quot;$(WrathData)\Player.log&quot;" IgnoreExitCode="true" ConsoleToMSBuild="true">
+			<Output TaskParameter="ExitCode" PropertyName="ExitCode" />
+			<Output TaskParameter="ConsoleOutput" PropertyName="MonoPathLine" />
+		</Exec>
 
-  <!-- Automatically deploys the mod on build -->
-  <Target Name="Deploy" AfterTargets="Build">
-    <ItemGroup>
-      <ToCopy Include="$(OutputPath)\$(AssemblyName).dll" />
-	  <ToCopy Include="$(OutputPath)\$(AssemblyName).pdb" />
-	  <ToCopy Include="$(OutputPath)\Info.json" />
-    </ItemGroup>
+		<PropertyGroup>
+			<MonoPathRegex>^Mono path\[0\] = '(.*?)/Wrath_Data/Managed'$</MonoPathRegex>
+		</PropertyGroup>
 
-    <Copy SourceFiles="@(ToCopy)" DestinationFolder="$(WrathPath)\Mods\$(MSBuildProjectName)" />
-  </Target>
+		<PropertyGroup>
+			<WrathInstallDir>$([System.Text.RegularExpressions.Regex]::Match($(MonoPathLine), $(MonoPathRegex)).Groups[1].Value)</WrathInstallDir>
+		</PropertyGroup>
 
+		<WriteLinesToFile File="$(SolutionDir)GamePath.props" Lines="&lt;Project xmlns='http://schemas.microsoft.com/developer/msbuild/2003'&gt;&#xD;&#xA;	&lt;PropertyGroup&gt;&#xD;&#xA;		&lt;WrathInstallDir&gt;$(WrathInstallDir)&lt;/WrathInstallDir&gt;&#xD;&#xA;	&lt;/PropertyGroup&gt;&#xD;&#xA;&lt;/Project&gt;" Overwrite="true" Encoding="utf-8" />
+	</Target>
+	<Target Name="DeleteCustomPropsFile" BeforeTargets="Clean">
+		<Delete Files="GamePath.props" />
+	</Target>
 </Project>

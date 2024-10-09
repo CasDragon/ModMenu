@@ -2,7 +2,7 @@
   "Id": "ModMenu",
   "DisplayName": "ModMenu",
   "Author": "WittleWolfie",
-  "Version": "2.3.2",
+  "Version": "2.0.3",
   "ManagerVersion": "0.21.3",
   "AssemblyName": "ModMenu.dll",
   "EntryMethod": "ModMenu.Main.Load",

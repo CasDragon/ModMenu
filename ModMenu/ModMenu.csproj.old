@@ -1,0 +1,150 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+			Enables the latest C# language features. Runtime features are limited by the .NET framework version, so some
+			features (e.g. Default Interfaces) are not available.
+		-->
+    <LangVersion>latest</LangVersion>
+    <!-- Latest .NET version supported by Wrath / Unity -->
+    <TargetFramework>net481</TargetFramework>
+
+    <!-- Needed to use publicized assembly -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <AssemblyName>ModMenu</AssemblyName>
+    <RootNamespace>ModMenu</RootNamespace>
+    
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Assets\**" />
+    <Compile Remove="lib\**" />
+    <EmbeddedResource Remove="Assets\**" />
+    <EmbeddedResource Remove="lib\**" />
+    <None Remove="Assets\**" />
+    <None Remove="lib\**" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <None Remove="WittleWolfie.png" />
+	<None Remove="UI_CharGen_IconDislike.png" />
+	<None Remove="UI_CharGen_IconLike.png" />
+	<None Remove="UI_journal_iconok_new2.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="NewTypes\ModRecording\Icons\UI_CharGen_IconDislike.png" />
+    <None Remove="NewTypes\ModRecording\Icons\UI_CharGen_IconLike.png" />
+    <None Remove="NewTypes\ModRecording\Icons\UI_journal_iconok_new2.png" />
+    <None Remove="NewTypes\ModRecording\Icons\UI_QuestNotification_IconFail.png" />
+    <None Remove="NewTypes\ModRecording\Icons\UI_QuestNotification_IconNew.png" />
+    <None Remove="NewTypes\ModRecording\Icons\UI_QuestNotification_IconOk.png" />
+    <None Remove="TestSettingsIllustration.png" />
+    <None Remove="TestSettingsIllustration2.png" />
+    <None Remove="UI_QuestNotification_IconFail.png" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_CharGen_IconDislike.png" />
+	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_CharGen_IconLike.png" />
+	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_journal_iconok_new2.png" />
+	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_QuestNotification_IconFail.png" />
+	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_QuestNotification_IconNew.png" />
+	  <EmbeddedResource Include="NewTypes\ModRecording\Icons\UI_QuestNotification_IconOk.png" />
+	  <EmbeddedResource Include="TestSettingsIllustration.png" />
+	  <EmbeddedResource Include="TestSettingsIllustration2.png" />
+	  <EmbeddedResource Include="WittleWolfie.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AssemblyPublicizer" Version="*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Main Wrath Assembly, Publicized -->
+    <Reference Include="Assembly-CSharp.dll">
+      <HintPath>$(SolutionDir)lib\Assembly-CSharp_public.dll</HintPath>
+    </Reference>
+    <Reference Include="Owlcat.Runtime.UI.dll">
+      <HintPath>$(SolutionDir)lib\Owlcat.Runtime.UI_public.dll</HintPath>
+    </Reference>
+	<Reference Include="Unity.TextMeshPro">
+	  <HintPath>$(SolutionDir)lib\Unity.TextMeshPro_public.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityModManager.dll">
+	  <HintPath>$(SolutionDir)lib\UnityModManager_public.dll</HintPath>
+	</Reference>
+
+    <!-- Wrath Assemblies -->
+    <Reference Include="Assembly-CSharp-firstpass.dll">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Owlcat.Runtime.Validation.dll">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\Owlcat.Runtime.Validation.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule.dll">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule.dll">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI.dll">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UniRx.dll">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UniRx.dll</HintPath>
+    </Reference>
+	<Reference Include="Newtonsoft.Json">
+	  <HintPath>$(WrathPath)\Wrath_Data\Managed\Newtonsoft.Json.dll</HintPath>
+	</Reference>
+
+    <!-- Harmony -->
+    <Reference Include="0Harmony">
+      <HintPath>$(WrathPath)\Wrath_Data\Managed\UnityModManager\0Harmony.dll</HintPath>
+    </Reference>
+	  <!-- UMM is moved into Publicized section -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Info.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Generates Assembly-CSharp_public.dll and Owlcat.Runtime.UI_public.dll -->
+	<Target Name="Publicize" AfterTargets="Clean">
+		<ItemGroup>
+      <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\Owlcat.Runtime.UI.dll" />
+      <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\Assembly-CSharp.dll" />
+	  <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\Unity.TextMeshPro.dll" />
+	  <Assemblies Include="$(WrathPath)\Wrath_Data\Managed\UnityModManager\UnityModManager.dll" />
+			
+    </ItemGroup>
+
+    <PublicizeTask InputAssemblies="@(Assemblies)" OutputDir="$(SolutionDir)lib\" />
+  </Target>
+
+  <!-- Automatically deploys the mod on build -->
+  <Target Name="Deploy" AfterTargets="Build">
+    <ItemGroup>
+      <ToCopy Include="$(OutputPath)\$(AssemblyName).dll" />
+	  <ToCopy Include="$(OutputPath)\$(AssemblyName).pdb" />
+	  <ToCopy Include="$(OutputPath)\Info.json" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(ToCopy)" DestinationFolder="$(WrathPath)\Mods\$(MSBuildProjectName)" />
+  </Target>
+
+</Project>

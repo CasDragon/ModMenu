@@ -8,9 +8,7 @@ using TMPro;
 using UniRx.Triggers;
 using UniRx;
 using HarmonyLib;
-using Epic.OnlineServices;
 using UnityEngine.EventSystems;
-using Steamworks;
 
 namespace ModMenu.NewTypes
 {
