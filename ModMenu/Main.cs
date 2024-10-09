@@ -28,7 +28,9 @@ namespace ModMenu
         modEntry.OnUnload = OnUnload;
 
         Harmony = new(modEntry.Info.Id);
-        Harmony.DEBUG = true;
+#if DEBUG
+        Harmony.DEBUG = true; 
+#endif
         Harmony.PatchAll();
         Logger.Log("Finished loading.");
       }
