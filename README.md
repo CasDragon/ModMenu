@@ -14,8 +14,8 @@ Some sample settings configurations:
 
 ## Installation
 
-1. Install [Unity Mod Manager](https://github.com/newman55/unity-mod-manager) (UMM), minimum version 0.23.0, and configure for use with Wrath
-2. Install [ModFinder](https://github.com/Pathfinder-WOTR-Modding-Community/ModFinder) and use it to search for Mewsifer Console
+1. Install [Unity Mod Manager](https://github.com/newman55/unity-mod-manager) (UMM), minimum version 0.27.0, and configure for use with Wrath
+2. Install [ModFinder](https://github.com/Pathfinder-WOTR-Modding-Community/ModFinder) and use it to search for ModMenu
 3. Click "Install"
 
 If you don't want to use ModFinder you can download the [latest release](https://github.com/CasDragon/ModMenu/releases/latest) and install normally using UMM.
@@ -32,11 +32,9 @@ File an [issue on GitHub](https://github.com/CasDragon/ModMenu/issues/new) or re
 
 This is a non-exhaustive list, let me know if you want your mod added here!
 
-* [Added Feats](https://github.com/Telyl/AddedFeats)
 * [BOAT BOAT BOAT](https://github.com/Balkoth-dev/WOTR_BOAT_BOAT_BOAT)
 * [Character Options+](https://github.com/WittleWolfie/CharacterOptionsPlus)
-* [MewsiferConsole](https://github.com/Pathfinder-WOTR-Modding-Community/MewsiferConsole)
-
+  
 ## Mod Developers
 
 ### Why should you use it?
@@ -131,6 +129,7 @@ Just make sure you always get the key the same way when getting a setting value.
 
 ## Acknowledgements
 
+* Kuru, for his hard work on the new fork
 * A shout out to Bubbles (factsubio) who essentially wrote the new image and button settings types when I was about to give up.
 * The modding community on [Discord](https://discord.com/invite/wotr), an invaluable and supportive resource for help modding.
 * All the Owlcat modders who came before me, wrote documents, and open sourced their code.
