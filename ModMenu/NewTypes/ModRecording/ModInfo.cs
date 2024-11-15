@@ -1,4 +1,5 @@
 ﻿using Kingmaker.Modding;
+using Kingmaker.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using UnityModManagerNet;
+using static Kingmaker.EntitySystem.Persistence.Versioning.PlayerUpgraderOnlyActions.EnsureUniqueItems;
 using static ModMenu.NewTypes.ModRecording.SaveInfoWithModList;
 using static UnityModManagerNet.UnityModManager;
 
@@ -50,13 +52,14 @@ namespace ModMenu.NewTypes.ModRecording
         {
           if (!searched)
           {
-            OM = OwlcatModificationsManager.Instance.m_Modifications.FirstOrDefault(mod => mod.Manifest.UniqueName == record.Id);
+            OM = OwlcatModificationsManager.Instance.m_Modifications.FirstOrDefault(mod => mod?.Manifest.UniqueName == record.Id);
             searched = true;
           }
           return OM;
         }
         else return null;
       }
+
     }
 
     private string m_CachedDisplayName;
@@ -68,7 +71,7 @@ namespace ModMenu.NewTypes.ModRecording
           if (record.modType is ModRecord.ModType.UmmMod && mod is UnityModManager.ModEntry UMod)
             m_CachedDisplayName = UMod.Info.DisplayName;
           else if (record.modType is ModRecord.ModType.OwlMod && mod is OwlcatModification OMod)
-            m_CachedDisplayName = OMod.Manifest.DisplayName;
+            m_CachedDisplayName = !OMod.Manifest.DisplayName.IsNullOrEmpty() ? OMod.Manifest.DisplayName : OMod.Manifest.UniqueName;
           else m_CachedDisplayName = record.Id;
         return m_CachedDisplayName;
       }
@@ -83,6 +86,8 @@ namespace ModMenu.NewTypes.ModRecording
           state = ModState.Uninstalled;
         else if (!entry.Enabled)
           state = ModState.Disabled;
+        else if (ParsedVersion == null)
+          state = ModState.Undefined;
         else if (entry.Version < ParsedVersion)
           state = ModState.Outdated;
         else
@@ -92,17 +97,54 @@ namespace ModMenu.NewTypes.ModRecording
           state = ModState.Uninstalled;
         else if (!OwlcatModificationsManager.Instance.m_Settings.EnabledModifications.Contains(entry.Manifest.UniqueName))
           state = ModState.Disabled;
-        else if (UnityModManager.ParseVersion(entry.Manifest.Version) < ParsedVersion)
+        else if (ParsedVersion == null || !TryGetVersion(entry.Manifest, out Version parsed))
+          state = ModState.Undefined;
+        else if (parsed < ParsedVersion)
           state = ModState.Outdated;
         else
           state = ModState.Good;
       else state = ModState.Good;
+
+      bool TryGetVersion(OwlcatModificationManifest manifest, out Version parsed)
+      {
+        try
+        {
+          parsed = UnityModManager.ParseVersion(manifest.Version);
+          return true;
+        }
+        catch (Exception ex)
+        {
+          StringBuilder sb = new("Error in parsing version of the OwlMod ");
+          if (manifest == null)
+            sb.Append(" of null manifest!!!");
+          else
+            sb.Append($"{manifest.UniqueName ?? "NULL ID"}, {manifest.Version ?? "NULL version."}");
+
+          Main.Logger.LogException(sb.ToString(), ex);
+
+          parsed = null;
+          return false;
+        }
+      }
     }
 
     internal ModInfo(ModRecord Record)
     {
       record = Record;
-      ParsedVersion = UnityModManager.ParseVersion(Record.Version);
+      try
+      {
+        ParsedVersion = UnityModManager.ParseVersion(Record.Version);
+      }
+      catch (Exception ex)
+      {
+        StringBuilder sb = new("Error in parsing version of the mod ");
+        if (Record == null)
+          sb.Append(" of null record!!!");
+        else
+          sb.Append($"{Record.modType} , {Record.Id ?? "NULL ID"}, {Record.Version ?? "NULL version."}");
+
+        Main.Logger.LogException(sb.ToString(), ex);
+      }
     }
   }
 }
