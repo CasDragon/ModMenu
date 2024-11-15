@@ -52,6 +52,11 @@ namespace ModMenu.NewTypes.ModRecording
       enGB: "Recorded mods",
       deDE: "Registriere Mods.",
       ruRU: "Зарегестрированные моды");
+    internal static readonly LocalizedString ShowModListTooltipHintName = Helpers.CreateString(
+      key: "ModsMenu.SaveSlotModRecordView.ShowModListTooltipHintName",
+      enGB: "Show recorded mods",
+      deDE: "Anzeigen registriere Mods.",
+      ruRU: "Показать зарегестрированные моды");
     internal static readonly LocalizedString TooltipUMM = Helpers.CreateString(
       key: "ModsMenu.SaveSlotModRecordView.TooltipUMM",
       enGB: "UMM mods",
