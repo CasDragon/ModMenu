@@ -1,11 +1,11 @@
-﻿using Kingmaker.UI.MVVM._PCView.Tooltip.Bricks;
-using Kingmaker.UI.MVVM._VM.Tooltip.Utils;
-using Owlcat.Runtime.UI.Tooltips;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Kingmaker.UI.MVVM._PCView.Tooltip.Bricks;
+using Kingmaker.UI.MVVM._VM.Tooltip.Utils;
+using Owlcat.Runtime.UI.Tooltips;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
