@@ -1,131 +1,153 @@
-﻿using System;
+﻿using Kingmaker.PubSubSystem;
+using Kingmaker.UI.MVVM._PCView.SaveLoad;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
-using HarmonyLib;
-using Kingmaker.PubSubSystem;
-using Kingmaker.UI.MVVM._ConsoleView.SaveLoad;
-using Kingmaker.UI.MVVM._PCView.SaveLoad;
-using Kingmaker.UI.MVVM._VM.SaveLoad;
-using Owlcat.Runtime.UI.ConsoleTools.ClickHandlers;
-using Owlcat.Runtime.UI.VirtualListSystem;
-using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
+using UniRx;
+using HarmonyLib;
 using static ModMenu.NewTypes.ModRecording.SaveSlotWithModListVM;
 using static ModMenu.NewTypes.ModRecording.StringsAndIcons;
-using static ModMenu.NewTypes.ModRecording.TooltipTemplateModRecord;
+using Kingmaker.UI.MVVM._VM.SaveLoad;
+using Owlcat.Runtime.UI.VirtualListSystem;
+using System.Reflection.Emit;
 
 namespace ModMenu.NewTypes.ModRecording
 {
-  internal static class ExtensionSaveSlotWithModListView
+  internal class SaveSlotWithModListView : SaveSlotPCView 
   {
+    internal SaveSlotWithModListVM saveSlotWithModListVM
+    {
+      get
+      {
+        return (SaveSlotWithModListVM) ViewModel;
+      }
+      set
+      {
+        ViewModel = value;
+      }
+    }
+
+    static SaveSlotWithModListView m_config;
+
     public const string modGreenMarkName = "ModsGreenMark";
     public const string modOrangeMarkName = "modOrangeMark";
     public const string modRedMarkName = "modRedMark";
+    [SerializeField]
+    GameObject GreenMark;
+    [SerializeField]
+    GameObject OrangeMark;
+    [SerializeField]
+    GameObject RedMark;
 
-    static SaveSlotWithModListPCView m_config_PC;
-    static SaveSlotWithModListConsoleView m_config_Console;
-
-    internal static void UpdateModStateIndicator(this ISaveSlotWithModListView instance, ModRecordState state)
+    public override void BindViewImplementation()
     {
-      if (state is ModRecordState.NoMods)
+      base.BindViewImplementation();
+      if (saveSlotWithModListVM is null)
       {
-        instance.RedMark.SetActive(false);
-        instance.OrangeMark.SetActive(false);
-        instance.GreenMark.SetActive(false);
+        Main.Logger.Warning($"SaveSlotWithModListView BindViewImplementation - save slot {ViewModel?.Reference?.Name ?? "NULL"} is trying to bind to bind to something that's not a saveSlotWithModListVM");
+        return;
       }
-      if (state is ModRecordState.AllGood)
-      {
-        instance.RedMark.SetActive(false);
-        instance.OrangeMark.SetActive(false);
-        instance.GreenMark.SetActive(true);
-      }
-      if (state is ModRecordState.SomeProblems)
-      {
-        instance.RedMark.SetActive(false);
-        instance.OrangeMark.SetActive(true);
-        instance.GreenMark.SetActive(false);
-      }
-      if (state is ModRecordState.SomethingIsMissing)
-      {
-        instance.RedMark.SetActive(true);
-        instance.OrangeMark.SetActive(false);
-        instance.GreenMark.SetActive(false);
-      }
+      saveSlotWithModListVM.StateOfMods.Value = ModRecordState.Undefined;
+      AddDisposable(saveSlotWithModListVM.StateOfMods.Subscribe(state => UpdateModStateIndicator(state)));
+      saveSlotWithModListVM.Refresh();
+      AddDisposable(EventBus.Subscribe(saveSlotWithModListVM));
     }
-    internal static SaveSlotView TryGetConfig(SaveSlotView oldPrefab)
+
+    public override void DestroyViewImplementation()
     {
-      if (oldPrefab is SaveSlotConsoleView && m_config_Console != null)
-        return m_config_Console; 
-      else if (oldPrefab is SaveSlotPCView && m_config_PC != null)
-        return m_config_PC; 
+      EventBus.Unsubscribe(saveSlotWithModListVM);
+      base.DestroyViewImplementation();
+    }
+
+    void UpdateModStateIndicator (ModRecordState state)
+    {
       try
       {
-        var a = GameObject.Instantiate(oldPrefab);
-        SaveSlotView newUntypedPrefab = oldPrefab is SaveSlotConsoleView ? a.gameObject.AddComponent<SaveSlotWithModListConsoleView>() : a.gameObject.AddComponent<SaveSlotWithModListPCView>();
-        MemberWiseCloneView(newUntypedPrefab, a);
-        UnityEngine.Object.DestroyImmediate(a);
-        GameObject.DontDestroyOnLoad(newUntypedPrefab.gameObject);
-        var newPrefab = newUntypedPrefab as ISaveSlotWithModListView;
-        var Pic = newUntypedPrefab.transform.Find("Picture");
-        var QuickMark = Pic.Find("QuickSaveMark");
-        var Mark = GameObject.Instantiate(QuickMark, Pic, false);
-        Mark.name = modGreenMarkName;
-        var newMarkTransform = Mark as RectTransform;
-        newMarkTransform.offsetMin = new Vector2(newMarkTransform.offsetMin.x + 138, newMarkTransform.offsetMin.y);
-        newMarkTransform.offsetMax = new Vector2(newMarkTransform.offsetMax.x + 138, newMarkTransform.offsetMax.y);
-        newMarkTransform.sizeDelta = (QuickMark.transform as RectTransform).sizeDelta;
-        Mark.GetComponent<Image>().sprite = IconOk;
-        newPrefab.GreenMark = Mark.gameObject;
-
-        Mark = GameObject.Instantiate(QuickMark, Pic, false);
-        Mark.name = modOrangeMarkName;
-        newMarkTransform = Mark as RectTransform;
-        newMarkTransform.SetParent(Pic);
-        newMarkTransform.offsetMin = new Vector2(newMarkTransform.offsetMin.x + 138, newMarkTransform.offsetMin.y);
-        newMarkTransform.offsetMax = new Vector2(newMarkTransform.offsetMax.x + 138, newMarkTransform.offsetMax.y);
-        newMarkTransform.sizeDelta = (QuickMark.transform as RectTransform).sizeDelta;
-        Mark.GetComponent<Image>().sprite = IconNew;
-        newPrefab.OrangeMark = Mark.gameObject;
-
-        Mark = GameObject.Instantiate(QuickMark, Pic, false);
-        Mark.name = modRedMarkName;
-        newMarkTransform = Mark as RectTransform;
-        newMarkTransform.SetParent(Pic);
-        newMarkTransform.offsetMin = new Vector2(newMarkTransform.offsetMin.x + 138, newMarkTransform.offsetMin.y);
-        newMarkTransform.offsetMax = new Vector2(newMarkTransform.offsetMax.x + 138, newMarkTransform.offsetMax.y);
-        newMarkTransform.sizeDelta = (QuickMark.transform as RectTransform).sizeDelta;
-        Mark.GetComponent<Image>().sprite = IconFailure;
-        newPrefab.RedMark = Mark.gameObject;
-        Main.Logger.Log($"TryGetConfig - 4");
-        if (newUntypedPrefab is SaveSlotWithModListPCView pcView)
-          { m_config_PC = pcView; Main.Logger.Log("Generated SaveSlotWithModListPCView config"); }
-        else if (newUntypedPrefab is SaveSlotWithModListConsoleView consoleView)
-          { m_config_Console = consoleView; Main.Logger.Log("Generated SaveSlotWithModListConsoleView config"); }
-        else
-          throw new Exception("Generated a config which is neither PC nor Console!");
-
-        return newUntypedPrefab;
+        if (state is ModRecordState.NoMods)
+        {
+          RedMark.gameObject.SetActive(false);
+          OrangeMark.gameObject.SetActive(false);
+          GreenMark.gameObject.SetActive(false);
+        }
+        if (state is ModRecordState.AllGood)
+        {
+          RedMark.gameObject.SetActive(false);
+          OrangeMark.gameObject.SetActive(false);
+          GreenMark.gameObject.SetActive(true);
+        }
+        if (state is ModRecordState.SomeProblems)
+        {
+          RedMark.gameObject.SetActive(false);
+          OrangeMark.gameObject.SetActive(true);
+          GreenMark.gameObject.SetActive(false);
+        }
+        if (state is ModRecordState.SomethingIsMissing)
+        {
+          RedMark.gameObject.SetActive(true);
+          OrangeMark.gameObject.SetActive(false);
+          GreenMark.gameObject.SetActive(false);
+        }
       }
       catch (Exception ex)
       {
         Main.Logger.LogException(ex);
-        return oldPrefab;
+        Main.Logger.Log($"Slot is {ViewModel?.Reference?.Name ?? "NULL"}. Red is null? {RedMark == null}. Orange is null? {OrangeMark == null}. Green is null? {GreenMark == null}");
       }
+    }
 
-    }
-    static void MemberWiseCloneView(SaveSlotView newPrefab, SaveSlotView oldPrefab)
-    {
-      foreach (var field in oldPrefab.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Concat(typeof(SaveSlotView).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)))
-        field.SetValue(newPrefab, field.GetValue(oldPrefab));
-    }
     [HarmonyPatch]
     static class FixVirtualListfabricIndices
     {
+      static SaveSlotWithModListView TryGetConfig(SaveSlotPCView oldPrefab)
+      {
+        if (m_config == null)
+        {
+          var a = GameObject.Instantiate(oldPrefab);
+          var newPrefab = a.gameObject.AddComponent<SaveSlotWithModListView>();
+          MemberWiseCloneView(newPrefab, a);
+          DestroyImmediate(a);
+          GameObject.DontDestroyOnLoad(newPrefab.gameObject);
+          var Pic = newPrefab.transform.Find("Picture");
+          var QuickMark = Pic.Find("QuickSaveMark");
+          var Mark = GameObject.Instantiate(QuickMark, Pic, false);
+          Mark.name = modGreenMarkName;
+          var newMarkTransform = Mark.transform as RectTransform;
+          newMarkTransform.offsetMin = new Vector2(newMarkTransform.offsetMin.x + 138, newMarkTransform.offsetMin.y);
+          newMarkTransform.offsetMax = new Vector2(newMarkTransform.offsetMax.x + 138, newMarkTransform.offsetMax.y);
+          newMarkTransform.sizeDelta = (QuickMark.transform as RectTransform).sizeDelta;
+          Mark.GetComponent<Image>().sprite = IconOk;
+          newPrefab.GreenMark = Mark.gameObject;
+
+          Mark = GameObject.Instantiate(QuickMark, Pic, false);
+          Mark.name = modOrangeMarkName;
+          newMarkTransform = Mark.transform as RectTransform;
+          newMarkTransform.SetParent(Pic);
+          newMarkTransform.offsetMin = new Vector2(newMarkTransform.offsetMin.x + 138, newMarkTransform.offsetMin.y);
+          newMarkTransform.offsetMax = new Vector2(newMarkTransform.offsetMax.x + 138, newMarkTransform.offsetMax.y);
+          newMarkTransform.sizeDelta = (QuickMark.transform as RectTransform).sizeDelta;
+          Mark.GetComponent<Image>().sprite = IconNew;
+          newPrefab.OrangeMark = Mark.gameObject;
+
+          Mark = GameObject.Instantiate(QuickMark, Pic, false);
+          Mark.name = modRedMarkName;
+          newMarkTransform = Mark.transform as RectTransform;
+          newMarkTransform.SetParent(Pic);
+          newMarkTransform.offsetMin = new Vector2(newMarkTransform.offsetMin.x + 138, newMarkTransform.offsetMin.y);
+          newMarkTransform.offsetMax = new Vector2(newMarkTransform.offsetMax.x + 138, newMarkTransform.offsetMax.y);
+          newMarkTransform.sizeDelta = (QuickMark.transform as RectTransform).sizeDelta;
+          Mark.GetComponent<Image>().sprite = IconFailure;
+          newPrefab.RedMark = Mark.gameObject;
+
+          m_config = newPrefab;
+        }
+
+        return m_config;
+      }
 
       static bool FixVirtualListIndices(bool previousResult, Type t, VirtualListViewsFabric fabric)
       {
@@ -140,8 +162,8 @@ namespace ModMenu.NewTypes.ModRecording
           var list = new IVirtualListElementView[Index + 1];
           for (var i = 0; i < Index; i++)
             list[i] = fabric.m_Prefabs[i];
-          var oldPrefab = fabric.m_Prefabs[fabric.m_Indices[anotherCode]] as SaveSlotView;
-          SaveSlotView newPrefab = TryGetConfig(oldPrefab);
+          var oldPrefab = fabric.m_Prefabs[fabric.m_Indices[anotherCode]] as SaveSlotPCView;
+          var newPrefab = TryGetConfig(oldPrefab);
 
           list[Index] = newPrefab;
           fabric.m_Prefabs = list;
@@ -150,7 +172,7 @@ namespace ModMenu.NewTypes.ModRecording
           for (var i = 0; i < Index; i++)
             pools[i] = fabric.m_Pools[i];
           pools[Index] = new();
-          fabric.m_Pools = pools;
+          fabric.m_Pools = pools; 
         }
         return true;
       }
@@ -194,160 +216,12 @@ namespace ModMenu.NewTypes.ModRecording
         return _instr;
       }
 
-    }
-  }
-  internal interface ISaveSlotWithModListView
-  {
-    [SerializeField]
-    GameObject GreenMark { get; set; }
-    [SerializeField]
-    GameObject OrangeMark { get; set; }
-    [SerializeField]
-    GameObject RedMark { get; set; }
-
-    internal SaveSlotWithModListVM saveSlotWithModListVM { get; set; }
-    internal abstract void UpdateModStateIndicator(ModRecordState state);
-  }
-  internal class SaveSlotWithModListPCView : SaveSlotPCView, ISaveSlotWithModListView
-  {
-    public GameObject GreenMark { get { return _greenMark; } set { _greenMark = value; } }
-    [SerializeField]
-    GameObject _greenMark; 
-    public GameObject OrangeMark { get { return _orangeMark; } set { _orangeMark = value; } }
-    [SerializeField]
-    GameObject _orangeMark;
-    public GameObject RedMark { get { return _redMark; } set { _redMark = value; } }
-    [SerializeField]
-    GameObject _redMark;
-    public SaveSlotWithModListVM saveSlotWithModListVM
-    {
-      get
+      static void MemberWiseCloneView(SaveSlotPCView newPrefab, SaveSlotPCView oldPrefab)
       {
-        return (SaveSlotWithModListVM) ViewModel;
-      }
-      set
-      {
-        ViewModel = value;
+        foreach (var field in typeof(SaveSlotPCView).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).Concat(typeof(SaveSlotView).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)))
+          field.SetValue(newPrefab, field.GetValue(oldPrefab));
+        
       }
     }
-
-    public override void BindViewImplementation()
-    {
-      try
-      {
-        base.BindViewImplementation();
-      }
-      catch (Exception ex)
-      {
-        Main.Logger.LogException(ex);
-      }
-      if (saveSlotWithModListVM is null)
-      {
-        Main.Logger.Warning($"SaveSlotWithModListView BindViewImplementation - save slot {ViewModel?.Reference?.Name ?? "NULL"} is trying to bind to bind to something that's not a saveSlotWithModListVM");
-        return;
-      }
-      saveSlotWithModListVM.StateOfMods.Value = ModRecordState.Undefined;
-      AddDisposable(saveSlotWithModListVM.StateOfMods.Subscribe(UpdateModStateIndicator));
-      saveSlotWithModListVM.Refresh();
-      AddDisposable(EventBus.Subscribe(saveSlotWithModListVM));
-    }
-
-    public override void DestroyViewImplementation()
-    {
-      EventBus.Unsubscribe(saveSlotWithModListVM);
-      base.DestroyViewImplementation();
-    }
-
-    public void UpdateModStateIndicator (ModRecordState state)
-    {
-      try
-      {
-        ExtensionSaveSlotWithModListView.UpdateModStateIndicator(this, state);
-      }
-      catch (Exception ex)
-      {
-        Main.Logger.LogException(ex);
-        Main.Logger.Log($"Slot is {ViewModel?.Reference?.Name ?? "NULL"}. Red is null? {RedMark == null}. Orange is null? {OrangeMark == null}. Green is null? {GreenMark == null}");
-      }
-    }
-  }
-  internal class SaveSlotWithModListConsoleView : SaveSlotConsoleView, ISaveSlotWithModListView, IFunc02ClickHandler
-  {
-    public GameObject GreenMark { get { return _greenMark; } set { _greenMark = value; } }
-    [SerializeField]
-    GameObject _greenMark;
-    public GameObject OrangeMark { get { return _orangeMark; } set { _orangeMark = value; } }
-    [SerializeField]
-    GameObject _orangeMark;
-    public GameObject RedMark { get { return _redMark; } set { _redMark = value; } }
-    [SerializeField]
-    GameObject _redMark;
-    public SaveSlotWithModListVM saveSlotWithModListVM
-    {
-      get
-      {
-        return (SaveSlotWithModListVM)ViewModel;
-      }
-      set
-      {
-        ViewModel = value;
-      }
-    }
-
-    public override void BindViewImplementation()
-    {
-      try
-      {
-        base.BindViewImplementation();
-      }
-      catch (Exception ex)
-      {
-        Main.Logger.LogException(ex);
-      }
-      if (saveSlotWithModListVM is null)
-      {
-        Main.Logger.Warning($"SaveSlotWithModListView BindViewImplementation - save slot {ViewModel?.Reference?.Name ?? "NULL"} is trying to bind to bind to something that's not a saveSlotWithModListVM");
-        return;
-      }
-      saveSlotWithModListVM.StateOfMods.Value = ModRecordState.Undefined;
-      AddDisposable(saveSlotWithModListVM.StateOfMods.Subscribe(UpdateModStateIndicator));
-      saveSlotWithModListVM.Refresh();
-      AddDisposable(EventBus.Subscribe(saveSlotWithModListVM));
-    }
-
-    public override void DestroyViewImplementation()
-    {
-      EventBus.Unsubscribe(saveSlotWithModListVM);
-      base.DestroyViewImplementation();
-    }
-
-    public void UpdateModStateIndicator(ModRecordState state)
-    {
-      try
-      {
-        ExtensionSaveSlotWithModListView.UpdateModStateIndicator(this, state);
-      }
-      catch (Exception ex)
-      {
-        Main.Logger.LogException(ex);
-        Main.Logger.Log($"Slot is {ViewModel?.Reference?.Name ?? "NULL"}. Red is null? {RedMark == null}. Orange is null? {OrangeMark == null}. Green is null? {GreenMark == null}");
-      }
-    }
-
-    public bool CanFunc02Click()
-    {
-      return saveSlotWithModListVM != null && saveSlotWithModListVM.AllMods.Any();
-    }
-
-    public string GetFunc02ClickHint()
-    {
-      return "GetFunc02ClickHintTest";
-    }
-
-    public void OnFunc02Click()
-    {
-      EventBus.RaiseEvent((ITooltipHandler h) => h.HandleInfoRequest(new TooltipTemplateModRecord(TooltipTemplateModRecordEnum.All, this)), true);
-    }
-
   }
 }

@@ -1,17 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Reflection.Emit;
-using UniRx;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.PubSubSystem;
+using Kingmaker.UI.MVVM._PCView.SaveLoad;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Kingmaker.Utility;
-using UnityModManagerNet;
+using Owlcat.Runtime.UI.VirtualListSystem;
 using static UnityModManagerNet.UnityModManager;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Text;
+using System.Threading.Tasks;
+using UniRx;
+using UnityEngine;
+using UnityEngine.UI;
+using Kingmaker.Modding;
+using UnityModManagerNet;
 
 namespace ModMenu.NewTypes.ModRecording
 {
@@ -74,6 +80,7 @@ namespace ModMenu.NewTypes.ModRecording
             Exclusions.Add(new(mod));
           else
             OtherMods.Add(new(mod));
+
     }
 
     public void OnUMMModStateChanged(ModEntry entry, bool IsBatch)
@@ -112,14 +119,7 @@ namespace ModMenu.NewTypes.ModRecording
         return;
       }
       foreach (var record in mods.Concat(Exclusions))
-        try
-        {
-          record.UpdateState();
-        }
-        catch (Exception ex)
-        {
-          Main.Logger.LogException($"Exception in mod {record?.record?.Id ?? "NULL!"}!", ex);
-        }
+        record.UpdateState();
 
       if (mods.Any(mod => mod.state <= ModState.Outdated ))
         StateOfMods.Value = ModRecordState.SomethingIsMissing;

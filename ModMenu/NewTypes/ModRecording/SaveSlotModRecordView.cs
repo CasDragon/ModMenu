@@ -1,35 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using HarmonyLib;
+using Kingmaker.Modding;
+using Kingmaker.UI;
+using Kingmaker.UI.Common;
+using Kingmaker.UI.MVVM._PCView.SaveLoad;
+using Kingmaker.UI.MVVM._VM.SaveLoad;
+using Kingmaker.UI.MVVM._VM.Tooltip.Utils;
+using Owlcat.Runtime.UI.Controls.Button;
+using Owlcat.Runtime.UI.Controls.Selectable;
+using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using HarmonyLib;
-using JetBrains.Annotations;
-using Kingmaker.Modding;
-using Kingmaker.PubSubSystem;
-using Kingmaker.UI;
-using Kingmaker.UI.Common;
-using Kingmaker.UI.MVVM._ConsoleView.SaveLoad;
-using Kingmaker.UI.MVVM._PCView.SaveLoad;
-using Kingmaker.UI.MVVM._VM.SaveLoad;
-using Kingmaker.UI.MVVM._VM.Tooltip.Utils;
-using Kingmaker.Utility;
-using Owlcat.Runtime.UI.ConsoleTools;
-using Owlcat.Runtime.UI.ConsoleTools.HintTool;
-using Owlcat.Runtime.UI.Controls.Button;
-using Owlcat.Runtime.UI.Controls.Selectable;
-using Owlcat.Runtime.UI.MVVM;
-using Owlcat.Runtime.UniRx;
-using Rewired;
+using System.IO;
 using TMPro;
 using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityModManagerNet;
+using Owlcat.Runtime.UI.MVVM;
+using Kingmaker.Localization;
+using System.Collections.Generic;
+using Kingmaker.Utility;
+using Kingmaker.PubSubSystem;
+using JetBrains.Annotations;
 using static ModMenu.NewTypes.ModRecording.StringsAndIcons;
-using static ModMenu.NewTypes.ModRecording.TooltipTemplateModRecord;
 
 namespace ModMenu.NewTypes.ModRecording
 {
@@ -65,35 +61,9 @@ namespace ModMenu.NewTypes.ModRecording
       Record = modInfo;
       (ViewModel as SaveSlotWithModListVM).BoundModRecordView = this;
       Refresh();
-      TooltipModStuff.SetTooltip(new TooltipTemplateModRecord(TooltipTemplateModRecordEnum.WithDependency, this));
-      TooltipNoDep.SetTooltip(new TooltipTemplateModRecord(TooltipTemplateModRecordEnum.NoDependency, this));
+      TooltipModStuff.SetTooltip(new TooltipTemplateModRecord(false, this));
+      TooltipNoDep.SetTooltip(new TooltipTemplateModRecord(true, this));
     }
-
-    [HarmonyPatch(typeof(SaveLoadConsoleView), nameof(SaveLoadConsoleView.CreateInput))]
-    [HarmonyPostfix]
-    static void AddModMenuRecordWidgetsForSaveLoadScreen(SaveLoadConsoleView __instance)
-    {
-      var collection = __instance.SlotCollectionView;
-      collection.AddDisposable(__instance.m_HintsWidget.BindHint(__instance.m_InputLayer.AddButton(
-        delegate (InputActionEventData _) { },
-        11,
-        collection.m_HasSlot.And(collection.NavigationBehaviour.DeepestFocusAsObservable.Select(HasMods)).ToReactiveProperty(), 
-        InputActionEventType.ButtonJustPressed),
-        ShowModListTooltipHintName,
-        ConsoleHintsWidget.HintPosition.Right));
-    }
-
-    static bool HasMods(IConsoleEntity entity)
-      {
-        if (entity is not ISaveSlotWithModListView slotWithMods)
-          return false;
-        if (slotWithMods.saveSlotWithModListVM is not SaveSlotWithModListVM ViewModelWithMods)
-        {
-          Main.Logger.Error("VM for SaveSlotWithModList is null");
-          return false;
-        }
-        return ViewModelWithMods.AllMods.Any();
-      }
 
     public override void DestroyViewImplementation()
     {
@@ -104,11 +74,9 @@ namespace ModMenu.NewTypes.ModRecording
 
     internal void Refresh()
     {
-      //AAAAAAAAAAAAAAAAAAAAAAAAA
       //Main.Logger.Log($"SaveSlotModRecordView run Refresh");
       var saveSlot = ViewModel as SaveSlotWithModListVM;
       var totalMods = saveSlot.OwlMods.Count + saveSlot.UMMMods.Count + saveSlot.OtherMods.Count;
-      bool Console = ButtonEnable == null || ButtonDisable == null;
       if (totalMods == 0)
       {
         m_ModStuff.text = NoMods;
@@ -117,7 +85,6 @@ namespace ModMenu.NewTypes.ModRecording
         SpriteNoDep.sprite = null;
         m_NoDep.transform.parent.transform.gameObject.SetActive(false);
         m_ModStuff.transform.parent.gameObject.SetActive(true);
-        if (!Console)
         ButtonEnable.SetInteractable(false);
         return;
       }
@@ -164,41 +131,34 @@ namespace ModMenu.NewTypes.ModRecording
           : string.Format(NoDepAdd, saveSlot.Exclusions.Count);
         SpriteNoDep.sprite = saveSlot.Exclusions.Any(mod => mod.state < ModState.Good) ? IconNew : IconLike;
         m_NoDep.transform.parent.gameObject.SetActive(true);
-        if (!Console)
-        {
-          ButtonEnable.gameObject.SetActive(true);
-          ButtonDisable.gameObject.SetActive(true);
-        }
+        ButtonEnable.gameObject.SetActive(true);
+        ButtonDisable.gameObject.SetActive(true);
       }
-      if (!Console)
+      if (saveSlot.DisabledMods is 0)
       {
-        if (saveSlot.DisabledMods is 0)
-        {
-          //Main.Logger.Log($"SaveSlotModRecordView - disabled the ButtonEnable");
+        //Main.Logger.Log($"SaveSlotModRecordView - disabled the ButtonEnable");
+        ButtonEnable.Interactable = false;
+        ButtonEnable.GetComponentInChildren<TextMeshProUGUI>().text = ButtonEnableMissingDeactivated;
+      }
+      else
+      {
+        //Main.Logger.Log($"SaveSlotModRecordView - enabled the ButtonEnable");
+        ButtonEnable.Interactable = true;
+        ButtonEnable.GetComponentInChildren<TextMeshProUGUI>().text = string.Format(ButtonEnableMissingDeactivated, saveSlot.DisabledMods);
+      }
 
-          ButtonEnable.Interactable = false;
-          ButtonEnable.GetComponentInChildren<TextMeshProUGUI>().text = ButtonEnableMissingDeactivated;
-        }
-        else
-        {
-          //Main.Logger.Log($"SaveSlotModRecordView - enabled the ButtonEnable");
-          ButtonEnable.Interactable = true;
-          ButtonEnable.GetComponentInChildren<TextMeshProUGUI>().text = string.Format(ButtonEnableMissingDeactivated, saveSlot.DisabledMods);
-        }
-
-        if (UnityModManager.modEntries.Where(mod => mod.Enabled).Cast<object>().Concat(OwlcatModificationsManager.Instance.AppliedModifications.Cast<object>())
-          .Any(entry => !saveSlot.AllMods.Any(mod => mod.mod == entry)))
-        {
-          //Main.Logger.Log($"SaveSlotModRecordView - enabled the ButtonDisable");
-          ButtonDisable.Interactable = true;
-          ButtonDisable.GetComponentInChildren<TextMeshProUGUI>().text = ButtonDisableExtraDeactivated;
-        }
-        else
-        {
-          //Main.Logger.Log($"SaveSlotModRecordView - disabled the ButtonDisable");
-          ButtonDisable.Interactable = false;
-          ButtonDisable.GetComponentInChildren<TextMeshProUGUI>().text = ButtonDisableExtraDeactivated;
-        }
+      if (UnityModManager.modEntries.Where(mod => mod.Enabled).Cast<object>().Concat(OwlcatModificationsManager.Instance.AppliedModifications.Cast<object>())
+        .Any(entry => !saveSlot.AllMods.Any(mod => mod.mod == entry)))
+      {
+        //Main.Logger.Log($"SaveSlotModRecordView - enabled the ButtonDisable");
+        ButtonDisable.Interactable = true;
+        ButtonDisable.GetComponentInChildren<TextMeshProUGUI>().text = ButtonDisableExtraDeactivated;
+      }
+      else
+      {
+        Main.Logger.Log($"SaveSlotModRecordView - disabled the ButtonDisable");
+        ButtonDisable.Interactable = false;
+        ButtonDisable.GetComponentInChildren<TextMeshProUGUI>().text = ButtonDisableExtraDeactivated;
       }
     }
 
@@ -253,25 +213,14 @@ namespace ModMenu.NewTypes.ModRecording
         TMP_Settings.instance?.m_defaultFontAsset?.material;
       var fontAsset = TMP_Settings.instance?.m_defaultFontAsset;
 
-      var _SaveSlotPCView = __instance.m_DetailedSaveSlotView as SaveSlotPCView;
-      bool isPcView = _SaveSlotPCView != null;
-
       var container = new GameObject(nameContainer, typeof(RectTransform));
       var rectTransform = container.transform as RectTransform;
       rectTransform.SetParent(__instance.m_DetailedSaveSlotView.gameObject.transform, false);
       rectTransform.SetAsLastSibling();
+      rectTransform.anchorMin = new(0.015f, 0);
+      rectTransform.anchorMax = new(0.89f, 0.22f);
       rectTransform.offsetMin = new(0.765f, 54.3735f);
       rectTransform.offsetMax = new(-1.6f, 1f);
-      if (isPcView)
-      {
-        rectTransform.anchorMin = new(0.015f, 0);
-        rectTransform.anchorMax = new(0.89f, 0.22f);
-      }
-      else
-      {
-        rectTransform.anchorMin = new(0.015f, -0.1f);
-        rectTransform.anchorMax = new(1.465f, 0.22f);
-      }
 
       var recordView = new GameObject(nameRecordView, typeof(RectTransform));
       var recordViewRectTrans = recordView.transform as RectTransform;
@@ -380,9 +329,6 @@ namespace ModMenu.NewTypes.ModRecording
       ExclusionsSpriteRectTrans.offsetMax = new(0, 0);
       ExclusionsSprite.SetActive(true);
 
-      if (!isPcView)
-        goto AfterButtons;
-
       var ModRecordButtons = new GameObject("ModRecordButtons", typeof(RectTransform));
       var ModRecordButtonsRectTrans = ModRecordButtons.transform as RectTransform;
       ModRecordButtonsRectTrans.SetParent(recordViewRectTrans, false);
@@ -394,8 +340,7 @@ namespace ModMenu.NewTypes.ModRecording
       ButtonsHorGroup.childAlignment = TextAnchor.LowerCenter;
       ButtonsHorGroup.spacing = 10;
 
-      var ButtonPrototype = _SaveSlotPCView.m_DeleteButton;
-      var Button = Instantiate(ButtonPrototype);
+      var Button = Instantiate((__instance.m_DetailedSaveSlotView as SaveSlotPCView).m_DeleteButton);
       modRecordView.ButtonEnable = Button;
       var text = Button.GetComponentInChildren<TextMeshProUGUI>();
       if (text != null)
@@ -410,7 +355,7 @@ namespace ModMenu.NewTypes.ModRecording
       Button.OnLeftClick.AddListener(() => modRecordView.StartDialogToProceedOrCancel(true));
       var sizeFitter = Button.gameObject.AddComponent<ContentSizeFitterExtended>();
       sizeFitter.m_VerticalFit = ContentSizeFitterExtended.FitMode.PreferredSize;
-      Button = Instantiate(ButtonPrototype);
+      Button = Instantiate((__instance.m_DetailedSaveSlotView as SaveSlotPCView).m_DeleteButton);
       modRecordView.ButtonDisable = Button;
       text = Button.GetComponentInChildren<TextMeshProUGUI>();
       if (text != null)
@@ -459,9 +404,6 @@ namespace ModMenu.NewTypes.ModRecording
       buttons.transform.SetParent(container.transform);
       buttons.transform.SetAsLastSibling();
       buttons.SetActive(true);
-
-    AfterButtons:;
-
       recordView.SetActive(true);
       container.SetActive(true);
       container.transform.parent.gameObject.SetActive(false);
