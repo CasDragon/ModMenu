@@ -18,7 +18,7 @@ namespace ModMenu.NewTypes.ModRecording
   [HarmonyPatch]
   internal class SaveSlotWithModListVM : SaveSlotVM, ISubscriberToModStateChange
   {
-    public static readonly List<string> NamesExclusions = new() { "0ToyBox0", "WrathPatches", "ModMenu", "UnityExplorer_B" };
+    public static readonly List<string> NamesExclusions = new() { "0ToyBox0", "WrathPatches", "ModMenu", "UnityExplorer_B", "CinematicUnityExplorer" };
     public List<ModInfo> OwlMods = new();
     public List<ModInfo> UMMMods = new();
     public List<ModInfo> OtherMods = new();

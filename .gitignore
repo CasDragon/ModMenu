@@ -351,3 +351,17 @@ MigrationBackup/
 
 # Local Files
 lib/**
+
+# Local History for Visual Studio Code
+.history/
+
+# Windows Installer files from build outputs
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+# JetBrains Rider
+*.sln.iml
+/GamePath.props
