@@ -240,8 +240,23 @@ namespace ModMenu.NewTypes
     [HarmonyPatch(typeof(SettingsPCView.SettingsViews))]
     static class SettingsViews_Patch
     {
-      [HarmonyPatch(nameof(SettingsPCView.SettingsViews.InitializeVirtualList)), HarmonyPrefix]
-      static bool Prefix(SettingsPCView.SettingsViews __instance, VirtualListComponent virtualListComponent)
+      static readonly MethodInfo CallToInitialize = AccessTools.DeclaredMethod(typeof(VirtualListComponent), nameof(VirtualListComponent.Initialize));
+
+      [HarmonyPatch(nameof(SettingsPCView.SettingsViews.InitializeVirtualList)), HarmonyTranspiler]
+      static IEnumerable<CodeInstruction> TranspilerToInitializeNewTemplates(IEnumerable<CodeInstruction> instructions)
+      {
+        foreach (var instr in instructions)
+          if (!instr.Calls(CallToInitialize))
+            yield return instr;
+          else
+          {
+            yield return new CodeInstruction(OpCodes.Ldarg_0);
+            yield return CodeInstruction.Call((IVirtualListElementTemplate[] original, SettingsPCView.SettingsViews __instance) => InitializeNewVirtualElementTemplates(original, __instance));
+            yield return instr;
+          }
+      }
+
+      static IVirtualListElementTemplate[] InitializeNewVirtualElementTemplates(IVirtualListElementTemplate[] original, SettingsPCView.SettingsViews __instance)
       {
         try
         {
@@ -252,7 +267,7 @@ namespace ModMenu.NewTypes
           var imageTemplate = CreateImageTemplate(Object.Instantiate(copyFrom));
           var buttonTemplate =
             CreateButtonTemplate(Object.Instantiate(copyFrom),
-            __instance.m_SettingsEntitySliderVisualPerceptionViewPrefab?.m_ResetButton);
+            __instance.m_SettingsEntityStatisticsOptOutViewPrefab?.m_GoToStatisticsButton);
 
           var headerTemplate =
             CreateCollapsibleHeaderTemplate(
@@ -263,32 +278,35 @@ namespace ModMenu.NewTypes
           var dropdownButtonTemplate =
             CreateDropdownButtonTemplate(
               Object.Instantiate(__instance.m_SettingsEntityDropdownViewPrefab.gameObject),
-              __instance.m_SettingsEntitySliderVisualPerceptionViewPrefab?.m_ResetButton);
+              __instance.m_SettingsEntityStatisticsOptOutViewPrefab?.m_GoToStatisticsButton);
 
-          virtualListComponent.Initialize(new IVirtualListElementTemplate[]
-          {
-            new VirtualListElementTemplate<SettingsEntityHeaderVM>(__instance.m_SettingsEntityHeaderViewPrefab),
-            new VirtualListElementTemplate<SettingsEntityBoolVM>(__instance.m_SettingsEntityBoolViewPrefab),
-            new VirtualListElementTemplate<SettingsEntityDropdownVM>(__instance.m_SettingsEntityDropdownViewPrefab, 0),
-            new VirtualListElementTemplate<SettingsEntitySliderVM>(__instance.m_SettingsEntitySliderViewPrefab, 0),
-            new VirtualListElementTemplate<SettingEntityKeyBindingVM>(__instance.m_SettingEntityKeyBindingViewPrefab),
-            new VirtualListElementTemplate<SettingsEntityDropdownVM>(__instance.m_SettingsEntityDropdownDisplayModeViewPrefab, 1),
-            new VirtualListElementTemplate<SettingsEntityDropdownGameDifficultyVM>(__instance.m_SettingsEntityDropdownGameDifficultyViewPrefab, 0),
-            new VirtualListElementTemplate<SettingsEntitySliderVM>(__instance.m_SettingsEntitySliderVisualPerceptionViewPrefab, 1),
-            new VirtualListElementTemplate<SettingsEntitySliderVM>(__instance.m_SettingsEntitySliderVisualPerceptionWithImagesViewPrefab, 2),
-            new VirtualListElementTemplate<SettingsEntityStatisticsOptOutVM>(__instance.m_SettingsEntityStatisticsOptOutViewPrefab),
+          var dropdownModMenuView = Object.Instantiate(__instance.m_SettingsEntityDropdownViewPrefab.gameObject).GetComponent<SettingsEntityDropdownPCView>();
+
+          original = original.Concat(
+            //new VirtualListElementTemplate<SettingsEntityHeaderVM>(__instance.m_SettingsEntityHeaderViewPrefab),
+            //new VirtualListElementTemplate<SettingsEntityBoolVM>(__instance.m_SettingsEntityBoolViewPrefab),
+            //new VirtualListElementTemplate<SettingsEntityDropdownVM>(__instance.m_SettingsEntityDropdownViewPrefab, 0),
+            //new VirtualListElementTemplate<SettingsEntityDropdownVM>(__instance.m_SettingsEntityDropdownViewPrefab, 1),
+            //new VirtualListElementTemplate<SettingsEntitySliderVM>(__instance.m_SettingsEntitySliderViewPrefab, 0),
+            //new VirtualListElementTemplate<SettingsEntitySliderVM>(__instance.m_SettingsEntitySliderGammaCorrectionViewPrefab, 1),
+            //new VirtualListElementTemplate<SettingsEntitySliderVM>(__instance.m_SettingEntityFontSizeViewPrefab, 2),
+            //new VirtualListElementTemplate<SettingEntityKeyBindingVM>(__instance.m_SettingEntityKeyBindingViewPrefab),
+            //new VirtualListElementTemplate<SettingsEntityDropdownGameDifficultyVM>(__instance.m_SettingsEntityDropdownGameDifficultyViewPrefab, 0),
+            //new VirtualListElementTemplate<SettingsEntityStatisticsOptOutVM>(__instance.m_SettingsEntityStatisticsOptOutViewPrefab),
             new VirtualListElementTemplate<SettingsEntityImageVM>(imageTemplate),
             new VirtualListElementTemplate<SettingsEntityButtonVM>(buttonTemplate),
             new VirtualListElementTemplate<SettingsEntityCollapsibleHeaderVM>(headerTemplate),
             new VirtualListElementTemplate<SettingsEntitySubHeaderVM>(subHeaderTemplate),
             new VirtualListElementTemplate<SettingsEntityDropdownButtonVM>(dropdownButtonTemplate, 0),
-          });
+            new VirtualListElementTemplate<SettingsEntityDropdownVM>(dropdownModMenuView, 5)
+            ).ToArray();
+          return original;
         }
         catch (Exception e)
         {
           Main.Logger.LogException("SettingsViews_Patch", e);
+          return original;
         }
-        return false;
       }
 
       private static SettingsEntityButtonView CreateButtonTemplate(GameObject prefab, OwlcatButton buttonPrefab)
