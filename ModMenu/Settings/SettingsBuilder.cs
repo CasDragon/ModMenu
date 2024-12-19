@@ -124,10 +124,11 @@ namespace ModMenu.Settings
       var group = ScriptableObject.CreateInstance<UISettingsGroup>();
       group.name = key;
       group.Title= title;
-      if (Settings?.Count > 0)
+      if (Group != null && Settings != null)
       {
         Group.SettingsList = Settings.ToArray();
-        Settings.RemoveRange(0, Settings.Count - 1);
+        if (Settings.Count > 0)
+          Settings.RemoveRange(0, Settings.Count - 1);
       }
       GroupList.Add(group);
       Group = group;
