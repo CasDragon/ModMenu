@@ -128,7 +128,8 @@ namespace ModMenu.Settings
       {
         Group.SettingsList = Settings.ToArray();
         if (Settings.Count > 0)
-          Settings.RemoveRange(0, Settings.Count);
+          //Settings.RemoveRange(0, Settings.Count);
+          Settings.Clear();
       }
       GroupList.Add(group);
       Group = group;
