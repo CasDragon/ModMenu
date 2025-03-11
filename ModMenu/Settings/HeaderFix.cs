@@ -4,6 +4,7 @@ using UnityEngine;
 using Kingmaker.Utility;
 using HarmonyLib;
 using Kingmaker.Blueprints.JsonSystem;
+using Kingmaker.UI.SettingsUI;
 
 namespace ModMenu.Settings
 {
@@ -32,6 +33,11 @@ namespace ModMenu.Settings
 
       foreach (RectTransform transform in menuSelectorView)
         transform.ResetScale();
+    }
+
+    public void HandleOpenSettings(bool isMainMenu = false, UISettingsManager.SettingsScreen? overrideSettingScreen = null)
+    {
+      //throw new System.NotImplementedException();
     }
   }
 }

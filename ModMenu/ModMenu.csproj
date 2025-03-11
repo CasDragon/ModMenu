@@ -5,7 +5,7 @@
 		<TargetFramework>net481</TargetFramework>
 		<AssemblyName>ModMenu</AssemblyName>
 		<Description>Mod Menu</Description>
-		<Version>2.0.8</Version>
+		<Version>2.0.9</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>ModMenu</RootNamespace>
