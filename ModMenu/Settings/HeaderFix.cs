@@ -23,7 +23,7 @@ namespace ModMenu.Settings
 
   internal class Fix : ISettingsUIHandler
   {
-    public void HandleOpenSettings(bool isMainMenu = false)
+    public void HandleOpenSettings(bool isMainMenu = false, UISettingsManager.SettingsScreen? overrideSettingScreen = null)
     {
       var menuSelectorView =
         Game.Instance.RootUiContext.m_CommonView?.transform.Find(
@@ -33,11 +33,6 @@ namespace ModMenu.Settings
 
       foreach (RectTransform transform in menuSelectorView)
         transform.ResetScale();
-    }
-
-    public void HandleOpenSettings(bool isMainMenu = false, UISettingsManager.SettingsScreen? overrideSettingScreen = null)
-    {
-      //throw new System.NotImplementedException();
     }
   }
 }
