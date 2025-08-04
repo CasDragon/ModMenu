@@ -19,7 +19,11 @@ namespace ModMenu.NewTypes.ModRecording
   internal class SaveSlotWithModListVM : SaveSlotVM, ISubscriberToModStateChange
   {
     public static readonly List<string> NamesExclusions = new() { "0ToyBox0", "WrathPatches", "ModMenu", "UnityExplorer_B", "CinematicUnityExplorer",
-                                "WOTR_PATH_OF_HELL", "BubbleBuffs", "WOTR_BOAT_BOAT_BOAT", "DataViewer"};
+                                "WOTR_PATH_OF_HELL", "BubbleBuffs", "WOTR_BOAT_BOAT_BOAT", "DataViewer", "MewsiferConsole.Mod", "AlterAsc.CombatRelief",
+                                "AutoMount", "EarlierMythicLevelUps", "lvl1companions", "!ManyModsPerformanceFix", "ModTagEx", "MorePartyViewSlots",
+                                "NoFilmGrainWrath", "!!ModTimer", "NWN2QuickCast", "PuzzleSkip", "RandomEquipment", "RespecWrath", "WrathScalingItemDCs",
+                                "WeaponFocusPlus", "AllowModdedAchievements", "WrathBuffBot", "FinneanTweaks", "MoreInformativeSaveNames", "MorePartySlots",
+                                "MultipleArchetypes", "PartialHighlightToggle", "TurnbasedCombatDelay", "VisualAdjustments2", "QuickCast"};
     public List<ModInfo> OwlMods = new();
     public List<ModInfo> UMMMods = new();
     public List<ModInfo> OtherMods = new();
