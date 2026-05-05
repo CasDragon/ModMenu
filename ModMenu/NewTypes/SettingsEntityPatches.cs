@@ -52,11 +52,11 @@ namespace ModMenu.NewTypes
         {
           return typeof(DictionarySettingsProvider)
                 .GetMethod(nameof(DictionarySettingsProvider.GetValue))
-                .MakeGenericMethod(typeof(ModsMenuEntry));
+                .MakeGenericMethod(typeof(object));
         }
 
         [HarmonyPrefix]
-        public static bool DeserializeSettingEntry(string key, ref ModsMenuEntry __result)
+        public static bool DeserializeSettingEntry(string key, ref object __result)
         {
           if (key.Equals(SettingsEntityModMenuEntry.instance.Key))
           {
