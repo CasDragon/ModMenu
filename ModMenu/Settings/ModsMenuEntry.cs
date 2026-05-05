@@ -18,7 +18,7 @@ namespace ModMenu.Settings
   /// Wrapper class used to display mod's settings in the ModMenu dropdown. Contains a list of UI Setting Groups and
   /// modification's info such as name.
   /// </summary>
-  internal class ModsMenuEntry : IConvertible
+  internal class ModsMenuEntry
   {
 #pragma warning disable CS1591 // stupid documentation requests
     #region Conversion

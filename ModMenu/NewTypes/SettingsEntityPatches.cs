@@ -41,31 +41,18 @@ namespace ModMenu.NewTypes
     internal static readonly FieldInfo OverrideType =
       AccessTools.Field(typeof(VirtualListLayoutElementSettings), "m_OverrideType");
 
-    /// <summary>
-    /// Patch to prevent exceptions on deserializing settings
-    /// </summary>
+    // Remove old broken setting
     [HarmonyPatch]
-    static class DictionarySettingsProviderPatcher
+    private static class GeneralSettingsProvider_Patch
+    {
+      [HarmonyPatch(typeof(GeneralSettingsProvider), nameof(GeneralSettingsProvider.LoadAll))]
+      [HarmonyPostfix]
+      private static void LoadAll_Patch(GeneralSettingsProvider __instance)
       {
-        [HarmonyTargetMethod]
-        static MethodInfo TargetMethod()
-        {
-          return typeof(DictionarySettingsProvider)
-                .GetMethod(nameof(DictionarySettingsProvider.GetValue))
-                .MakeGenericMethod(typeof(object));
-        }
-
-        [HarmonyPrefix]
-        public static bool DeserializeSettingEntry(string key, ref object __result)
-        {
-          if (key.Equals(SettingsEntityModMenuEntry.instance.Key))
-          {
-            __result = ModsMenuEntry.EmptyInstance;
-            return false;
-          }
-          return true;
-        }
+        if(__instance.m_Dictionary.ContainsKey("modsmenu.entrystaticinstance"))
+          __instance.m_Dictionary.Remove("modsmenu.entrystaticinstance");
       }
+    }
 
     /// <summary>
     /// Patch to change the way dropdown options are generated so that the settings description would show individual mod descriptions.
@@ -79,7 +66,7 @@ namespace ModMenu.NewTypes
         if (__instance.ViewModel.m_UISettingsEntity is not UISettingsEntityDropdownModMenuEntry) return true;
 
         else
-        __instance.Dropdown.gameObject.SetActive(true);
+          __instance.Dropdown.gameObject.SetActive(true);
         __instance.Dropdown.ClearOptions();
 
         List<TMP_Dropdown.OptionData> options = new();
@@ -156,15 +143,15 @@ namespace ModMenu.NewTypes
         if (settingsScreen != ModsMenuEntity.SettingsScreenId) return true;
         try
         {
-        Main.Logger.NativeLog("Collecting setting entities.");
+          Main.Logger.NativeLog("Collecting setting entities.");
 
-        __instance.m_SettingEntities.Clear();
-        __instance.m_SettingEntities.Add(__instance.AddDisposableAndReturn(SettingsVM.GetVMForSettingsItem(UISettingsEntityDropdownModMenuEntry.instance)));
+          __instance.m_SettingEntities.Clear();
+          __instance.m_SettingEntities.Add(__instance.AddDisposableAndReturn(SettingsVM.GetVMForSettingsItem(UISettingsEntityDropdownModMenuEntry.instance)));
           if (UISettingsEntityDropdownModMenuEntry.instance.Setting.GetTempValue() == ModsMenuEntry.EmptyInstance)
             return false;
-        //__instance.m_SettingEntities.Add(__instance.AddDisposableAndReturn(SettingsVM.GetVMForSettingsItem(separator)));
+          //__instance.m_SettingEntities.Add(__instance.AddDisposableAndReturn(SettingsVM.GetVMForSettingsItem(separator)));
 
-            //Here should be a toggle for mod disabling, but do we need it?
+          //Here should be a toggle for mod disabling, but do we need it?
           SettingsEntitySubHeaderVM subheader;
           foreach (var uisettingsGroup in ModsMenuEntity.CollectSettingGroups)
           {
@@ -548,7 +535,7 @@ namespace ModMenu.NewTypes
         _inst[index].labels.Add(labelNotMods);
 
         Label labelIsMods = gen.DefineLabel();
-        _inst[index+5].labels.Add(labelIsMods);
+        _inst[index + 5].labels.Add(labelIsMods);
 
         MethodInfo mi = typeof(Enumerable).GetMethod(nameof(Enumerable.ToList)).MakeGenericMethod(typeof(UISettingsGroup));
 
@@ -562,7 +549,7 @@ namespace ModMenu.NewTypes
           new CodeInstruction(OpCodes.Call, typeof(ModsMenuEntity).GetProperty(nameof(ModsMenuEntity.CollectSettingGroups), BindingFlags.Static | BindingFlags.NonPublic).GetMethod),
           new CodeInstruction(OpCodes.Callvirt, mi),
           new CodeInstruction(OpCodes.Br_S, labelIsMods)
-        });;
+        }); ;
 
         return _inst;
       }
@@ -610,7 +597,7 @@ namespace ModMenu.NewTypes
         for (int i = indexStart + 6; i < length; i++)
         {
           if (
-            _inst[i].opcode == OpCodes.Call && _inst[i].operand is MethodInfo { Name: nameof(string.Format)} &&
+            _inst[i].opcode == OpCodes.Call && _inst[i].operand is MethodInfo { Name: nameof(string.Format) } &&
             _inst[i + 1].opcode == OpCodes.Stfld && _inst[i + 1].operand is FieldInfo { Name: "text" }
             )
           {
@@ -629,7 +616,7 @@ namespace ModMenu.NewTypes
         _inst[indexStart].labels.Add(labelNotMod);
 
         Label labelIsMod = gen.DefineLabel();
-        _inst[indexEnd +1].labels.Add(labelIsMod);
+        _inst[indexEnd + 1].labels.Add(labelIsMod);
 
         _inst.InsertRange(indexStart, new CodeInstruction[]
         {
@@ -642,8 +629,8 @@ namespace ModMenu.NewTypes
         return _inst;
       }
       static LocalizedString newDefaultMessage;
-      static bool CheckForSelectedSettingsScreenType() =>  RootUIContext.Instance?.CommonVM.SettingsVM.Value?.SelectedMenuEntity.Value?.SettingsScreenType == (UISettingsManager.SettingsScreen)ModsMenuEntity.SettingsScreenValue;
-      
+      static bool CheckForSelectedSettingsScreenType() => RootUIContext.Instance?.CommonVM.SettingsVM.Value?.SelectedMenuEntity.Value?.SettingsScreenType == (UISettingsManager.SettingsScreen)ModsMenuEntity.SettingsScreenValue;
+
       static string MakeMeDefaultButtonMessage()
       {
         return string.Format(newDefaultMessage, SettingsEntityModMenuEntry.instance.m_TempValue.ModInfo.ModName);
