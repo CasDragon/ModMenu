@@ -8,6 +8,8 @@ using System.Reflection.Emit;
 using UniRx;
 using HarmonyLib;
 using Kingmaker.EntitySystem.Persistence;
+using Kingmaker.Modding;
+using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Kingmaker.Utility;
 using UnityModManagerNet;
@@ -23,26 +25,20 @@ namespace ModMenu.NewTypes.ModRecording
                                 "AutoMount", "EarlierMythicLevelUps", "lvl1companions", "!ManyModsPerformanceFix", "ModTagEx", "MorePartyViewSlots",
                                 "NoFilmGrainWrath", "!!ModTimer", "NWN2QuickCast", "PuzzleSkip", "RandomEquipment", "RespecWrath", "WrathScalingItemDCs",
                                 "WeaponFocusPlus", "AllowModdedAchievements", "WrathBuffBot", "FinneanTweaks", "MoreInformativeSaveNames", "MorePartySlots",
-                                "MultipleArchetypes", "PartialHighlightToggle", "TurnbasedCombatDelay", "VisualAdjustments2", "QuickCast"};
+                                "MultipleArchetypes", "PartialHighlightToggle", "TurnbasedCombatDelay", "VisualAdjustments2", "QuickCast", "ModListOutputter",
+                                "LoadOptimizations", "EnduringRework", "CombatLogDCBreakdown", "NWN2QuickItems", "DynamicLocalizationLoader"
+    };
     public List<ModInfo> OwlMods = new();
     public List<ModInfo> UMMMods = new();
     public List<ModInfo> OtherMods = new();
     public List<ModInfo> Exclusions = new();
 
-    public IEnumerable<ModInfo> AllMods
-    {
-      get
-      {
-        return OwlMods.Concat(UMMMods).Concat(OtherMods).Concat(Exclusions);
-      }
-    }
-    public IEnumerable<ModInfo> AllNonExclusionMods
-    {
-      get
-      {
-        return OwlMods.Concat(UMMMods).Concat(OtherMods);
-      }
-    }
+    public List<string> ExcludeEntirely = new() { "WoolooMod" };
+    
+
+    public IEnumerable<ModInfo> AllMods => OwlMods.Concat(UMMMods).Concat(OtherMods).Concat(Exclusions);
+
+    public IEnumerable<ModInfo> AllNonExclusionMods => OwlMods.Concat(UMMMods).Concat(OtherMods);
 
     public int DisabledMods;
     public ReactiveProperty<ModRecordState> StateOfMods = new();
@@ -54,31 +50,47 @@ namespace ModMenu.NewTypes.ModRecording
     public SaveSlotWithModListVM(SaveInfo saveInfo, IReadOnlyReactiveProperty<SaveLoadMode> mode, Action<SaveInfo> saveOrLoadAction, Action<SaveInfo> deleteAction)
       : base(saveInfo, mode, saveOrLoadAction, deleteAction)
     {
-
+      EventBus.Subscribe(this);
       if (saveInfo is not SaveInfoWithModList save)
         return;
       if (save.OwlModRecordList is not null)
         foreach (var mod in save.OwlModRecordList)
+        {
+          if (ExcludeEntirely.Any(name => name == mod.Id))
+            break;
           if (NamesExclusions.Any(name => name == mod.Id))
             Exclusions.Add(new(mod));
           else
             OwlMods.Add(new(mod));
-          
+        }
 
       if (save.UmmModRecordList is not null)
         foreach (var mod in save.UmmModRecordList)
+        {
+          if (ExcludeEntirely.Any(name => name == mod.Id))
+            break;
           if (NamesExclusions.Any(name => name == mod.Id))
             Exclusions.Add(new(mod));
           else
             UMMMods.Add(new(mod));
-          
+        }
+
 
       if (save.OtherModRecordList is not null)
         foreach (var mod in save.OtherModRecordList)
+        {
+          if (ExcludeEntirely.Any(name => name == mod.Id))
+            break;
           if (NamesExclusions.Any(name => name == mod.Id))
             Exclusions.Add(new(mod));
           else
             OtherMods.Add(new(mod));
+        }
+    }
+    protected new void Dispose()
+    {
+      EventBus.Unsubscribe(this);
+      base.Dispose();
     }
 
     public void OnUMMModStateChanged(ModEntry entry, bool IsBatch)

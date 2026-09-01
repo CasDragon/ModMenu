@@ -249,13 +249,6 @@ namespace ModMenu.NewTypes.ModRecording
       saveSlotWithModListVM.StateOfMods.Value = ModRecordState.Undefined;
       AddDisposable(saveSlotWithModListVM.StateOfMods.Subscribe(UpdateModStateIndicator));
       saveSlotWithModListVM.Refresh();
-      AddDisposable(EventBus.Subscribe(saveSlotWithModListVM));
-    }
-
-    public override void DestroyViewImplementation()
-    {
-      EventBus.Unsubscribe(saveSlotWithModListVM);
-      base.DestroyViewImplementation();
     }
 
     public void UpdateModStateIndicator (ModRecordState state)
