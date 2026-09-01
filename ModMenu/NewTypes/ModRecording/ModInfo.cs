@@ -13,7 +13,7 @@ using static UnityModManagerNet.UnityModManager;
 
 namespace ModMenu.NewTypes.ModRecording
 {
-  internal class ModInfo
+  public class ModInfo
   {
 
     internal static Dictionary<string, ModEntry> cache = new();

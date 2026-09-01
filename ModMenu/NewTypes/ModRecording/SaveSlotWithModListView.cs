@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 using HarmonyLib;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._ConsoleView.SaveLoad;
@@ -103,9 +101,13 @@ namespace ModMenu.NewTypes.ModRecording
         newPrefab.RedMark = Mark.gameObject;
         Main.Logger.Log($"TryGetConfig - 4");
         if (newUntypedPrefab is SaveSlotWithModListPCView pcView)
-          { m_config_PC = pcView; Main.Logger.Log("Generated SaveSlotWithModListPCView config"); }
+        {
+          m_config_PC = pcView; Main.Logger.Log("Generated SaveSlotWithModListPCView config");
+        }
         else if (newUntypedPrefab is SaveSlotWithModListConsoleView consoleView)
-          { m_config_Console = consoleView; Main.Logger.Log("Generated SaveSlotWithModListConsoleView config"); }
+        {
+          m_config_Console = consoleView; Main.Logger.Log("Generated SaveSlotWithModListConsoleView config");
+        }
         else
           throw new Exception("Generated a config which is neither PC nor Console!");
 
@@ -221,14 +223,8 @@ namespace ModMenu.NewTypes.ModRecording
     GameObject _redMark;
     public SaveSlotWithModListVM saveSlotWithModListVM
     {
-      get
-      {
-        return (SaveSlotWithModListVM) ViewModel;
-      }
-      set
-      {
-        ViewModel = value;
-      }
+      get => (SaveSlotWithModListVM) ViewModel;
+      set => ViewModel = value;
     }
 
     public override void BindViewImplementation()
@@ -277,14 +273,8 @@ namespace ModMenu.NewTypes.ModRecording
     GameObject _redMark;
     public SaveSlotWithModListVM saveSlotWithModListVM
     {
-      get
-      {
-        return (SaveSlotWithModListVM)ViewModel;
-      }
-      set
-      {
-        ViewModel = value;
-      }
+      get => (SaveSlotWithModListVM)ViewModel;
+      set => ViewModel = value;
     }
 
     public override void BindViewImplementation()

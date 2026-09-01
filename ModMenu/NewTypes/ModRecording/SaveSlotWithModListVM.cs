@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Reflection;
 using System.Reflection.Emit;
 using UniRx;
 using HarmonyLib;
 using Kingmaker.EntitySystem.Persistence;
-using Kingmaker.Modding;
 using Kingmaker.PubSubSystem;
 using Kingmaker.UI.MVVM._VM.SaveLoad;
 using Kingmaker.Utility;
@@ -18,9 +15,9 @@ using static UnityModManagerNet.UnityModManager;
 namespace ModMenu.NewTypes.ModRecording
 {
   [HarmonyPatch]
-  internal class SaveSlotWithModListVM : SaveSlotVM, ISubscriberToModStateChange
+  public class SaveSlotWithModListVM : SaveSlotVM, ISubscriberToModStateChange
   {
-    public static readonly List<string> NamesExclusions = new() { "0ToyBox0", "WrathPatches", "ModMenu", "UnityExplorer_B", "CinematicUnityExplorer",
+    public static List<string> NamesExclusions = new() { "0ToyBox0", "WrathPatches", "ModMenu", "UnityExplorer_B", "CinematicUnityExplorer",
                                 "WOTR_PATH_OF_HELL", "BubbleBuffs", "WOTR_BOAT_BOAT_BOAT", "DataViewer", "MewsiferConsole.Mod", "AlterAsc.CombatRelief",
                                 "AutoMount", "EarlierMythicLevelUps", "lvl1companions", "!ManyModsPerformanceFix", "ModTagEx", "MorePartyViewSlots",
                                 "NoFilmGrainWrath", "!!ModTimer", "NWN2QuickCast", "PuzzleSkip", "RandomEquipment", "RespecWrath", "WrathScalingItemDCs",
@@ -33,12 +30,20 @@ namespace ModMenu.NewTypes.ModRecording
     public List<ModInfo> OtherMods = new();
     public List<ModInfo> Exclusions = new();
 
-    public List<string> ExcludeEntirely = new() { "WoolooMod" };
+    public static List<string> ExcludeEntirely = new() {  };
+
+    public static void AddToExcludeEntirely(string modid)
+    {
+      ExcludeEntirely.Add(modid);
+    }
+
+    public static void AddToNamesExclusion(string modid)
+    {
+      NamesExclusions.Add(modid);
+    }
     
-
-    public IEnumerable<ModInfo> AllMods => OwlMods.Concat(UMMMods).Concat(OtherMods).Concat(Exclusions);
-
     public IEnumerable<ModInfo> AllNonExclusionMods => OwlMods.Concat(UMMMods).Concat(OtherMods);
+    public IEnumerable<ModInfo> AllMods => AllNonExclusionMods.Concat(Exclusions);
 
     public int DisabledMods;
     public ReactiveProperty<ModRecordState> StateOfMods = new();

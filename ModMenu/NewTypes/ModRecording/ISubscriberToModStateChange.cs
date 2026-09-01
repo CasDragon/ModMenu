@@ -1,11 +1,6 @@
 ﻿using HarmonyLib;
 using Kingmaker.Modding;
 using Kingmaker.PubSubSystem;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static UnityModManagerNet.UnityModManager;
 
 namespace ModMenu.NewTypes.ModRecording
